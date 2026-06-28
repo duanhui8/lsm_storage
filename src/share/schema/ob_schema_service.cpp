@@ -134,6 +134,13 @@ ObSchemaService &ObSchemaService::instance() {
 
 int ObSchemaService::create_database(const char *db_name, uint64_t &database_id) {
   std::lock_guard<std::mutex> lock(mutex_);
+  // Dedup: skip if database with same name already exists
+  for (auto &pair : databases_) {
+    if (std::strcmp(pair.second.get_database_name(), db_name) == 0) {
+      database_id = pair.first;
+      return 0;
+    }
+  }
   database_id = next_database_id_++;
   ObDatabaseSchema db;
   db.set_database_id(database_id);

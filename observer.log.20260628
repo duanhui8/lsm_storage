@@ -375,3 +375,36 @@ Finish dump configuration
 [2026-06-28 15:37:27.210391 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: execute@command_executor.cpp:167] >> DDL executed (via SchemaService). rc=0
 [2026-06-28 15:37:27.224180 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
 [2026-06-28 15:37:31.839282 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 15:59:48.107234 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 15:59:48.116308 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:54] >> ObDDLService PALF + SystemTablet inited, base_dir=miniob/store
+[2026-06-28 15:59:48.116383 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:166] >> SystemTablet scan: recovered 0 databases from __all_database LSM
+[2026-06-28 15:59:48.116406 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:169] >> ObDDLService: PALF CLOG + SystemTablet recovery completed
+[2026-06-28 15:59:48.116562 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: insert_database@ob_database_sql_service.cpp:50] >> ObDatabaseSqlService: INSERT INTO __all_database (1, sys)
+[2026-06-28 15:59:48.116631 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: log_operation@ob_ddl_sql_service.cpp:55] >> ObDDLSqlService: INSERT INTO __all_ddl_operation (type=4, db=sys)
+[2026-06-28 15:59:48.116659 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: create_database@ob_ddl_service.cpp:79] >> ObDDLService: CREATE DATABASE sys (id=1) via PALF CLOG, lsn=0
+[2026-06-28 15:59:48.116679 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
+[2026-06-28 15:59:48.116693 pid:25903 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 15:59:56.071934 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 15:59:56.078991 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:54] >> ObDDLService PALF + SystemTablet inited, base_dir=miniob/store
+[2026-06-28 15:59:56.079207 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: insert_database@ob_database_sql_service.cpp:50] >> ObDatabaseSqlService: INSERT INTO __all_database (1, sys)
+[2026-06-28 15:59:56.079264 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: log_operation@ob_ddl_sql_service.cpp:55] >> ObDDLSqlService: INSERT INTO __all_ddl_operation (type=4, db=sys)
+[2026-06-28 15:59:56.079284 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:189] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=0)
+[2026-06-28 15:59:56.079331 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:164] >> SystemTablet recovery: sys (id=1)
+[2026-06-28 15:59:56.079360 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:164] >> SystemTablet recovery:  (id=4)
+[2026-06-28 15:59:56.079366 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:166] >> SystemTablet scan: recovered 2 databases from __all_database LSM
+[2026-06-28 15:59:56.079385 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:169] >> ObDDLService: PALF CLOG + SystemTablet recovery completed
+[2026-06-28 15:59:56.079440 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
+[2026-06-28 15:59:56.079457 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 16:00:04.053123 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 16:00:35.496809 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 16:00:45.844447 pid:26124 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

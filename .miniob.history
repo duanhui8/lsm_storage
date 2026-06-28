@@ -84,7 +84,7 @@ drop database test2;
 create database test;
 ### 2026-06-28 14:58:09.768
 SHOW DATABASES;
-### 2026-06-28 15:37:06.314
-show databases;
 ### 2026-06-28 15:37:25.700
 drop database test;
+### 2026-06-28 16:00:43.318
+show databases;
