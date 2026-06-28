@@ -27,6 +27,8 @@ public:
 
   /** create_database — full CREATE DATABASE flow with PALF CLOG */
   int create_database(const char *db_name, uint64_t &database_id);
+  /** drop_database — full DROP DATABASE flow with PALF CLOG */
+  int drop_database(const char *db_name);
   int create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id);
 
   /** Replay CLOG via PALF on startup to recover schema */

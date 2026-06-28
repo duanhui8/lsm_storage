@@ -14,6 +14,7 @@ public:
   ObDDLOperator() = default;
   ~ObDDLOperator() = default;
   int create_database(const char *db_name, uint64_t &database_id);
+  int drop_database(const char *db_name);
   int create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id);
 };
 }}

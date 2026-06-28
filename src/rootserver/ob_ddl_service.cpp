@@ -177,6 +177,42 @@ int ObDDLService::create_database(const char *db_name, uint64_t &database_id)
   return 0;
 }
 
+int ObDDLService::drop_database(const char *db_name)
+{
+  if (!is_inited_ || log_handler_ == nullptr) return -1;
+
+  // === CLOG via PALF (WAL: write BEFORE schema change) ===
+  uint64_t type = 2, name_len = strlen(db_name);  // type=2 = DROP_DATABASE
+  int64_t buf_len = sizeof(type) + sizeof(name_len) + name_len;
+  char *log_buf = static_cast<char *>(std::malloc(buf_len));
+  char *p = log_buf;
+  std::memcpy(p, &type, sizeof(type)); p += sizeof(type);
+  std::memcpy(p, &name_len, sizeof(name_len)); p += sizeof(name_len);
+  std::memcpy(p, db_name, name_len);
+
+  palf::LSN lsn;
+  int64_t scn = 0;
+  int ret = log_handler_->append(log_buf, buf_len,
+      logservice::DDL_LOG_BASE_TYPE, lsn, scn);
+  std::free(log_buf);
+  if (ret != 0) { LOG_ERROR("PALF append failed for DROP DATABASE %s", db_name); return ret; }
+
+  // === Schema remove (in-memory) ===
+  ret = ddl_operator_.drop_database(db_name);
+  if (ret != 0) return ret;
+
+  // === SLOG write ===
+  storage::ObStorageLogParam slog_param;
+  slog_param.tenant_id_ = 1;
+  slog_param.log_type_  = static_cast<int32_t>(storage::ObStorageLogType::SLOG_DROP_DATABASE);
+  slog_param.data_      = db_name;
+  slog_param.data_len_  = name_len;
+  slog_logger_.write_log(slog_param);
+
+  LOG_INFO("ObDDLService: DROP DATABASE %s via PALF CLOG, lsn=%lu", db_name, lsn.val_);
+  return 0;
+}
+
 int ObDDLService::create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id)
 {
   if (!is_inited_ || log_handler_ == nullptr) return -1;
@@ -219,6 +255,9 @@ int ObDDLService::recover_schema()
       std::string db_name(entry->data_, entry->data_len_);
       uint64_t db_id = 0;
       self->ddl_operator_.create_database(db_name.c_str(), db_id);
+    } else if (entry->log_type_ == static_cast<int32_t>(storage::ObStorageLogType::SLOG_DROP_DATABASE)) {
+      std::string db_name(entry->data_, entry->data_len_);
+      self->ddl_operator_.drop_database(db_name.c_str());
     }
     return 0;
   });
@@ -244,6 +283,9 @@ int ObDDLService::replay(const void *buffer, int64_t nbytes,
     uint64_t new_id = 0;
     ddl_operator_.create_database(name, new_id);
     LOG_INFO("CLOG replay: CREATE DATABASE %s (id=%lu, lsn=%lu)", name, new_id, lsn.val_);
+  } else if (type == 2) {  // DROP DATABASE
+    ddl_operator_.drop_database(name);
+    LOG_INFO("CLOG replay: DROP DATABASE %s (lsn=%lu)", name, lsn.val_);
   } else if (type == 3) {  // CREATE TABLE
     std::memcpy(&db_id, p, sizeof(db_id));
     share::schema::ObTableSchema ts;

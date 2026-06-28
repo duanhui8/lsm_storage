@@ -5,7 +5,7 @@ miniob is licensed under Mulan PSL v2. */
 
 #include "common/sys/rc.h"
 #include "sql/stmt/drop_database_stmt.h"
-#include "share/schema/ob_schema_service.h"
+#include "rootserver/ob_ddl_service.h"
 #include "session/session.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
@@ -27,7 +27,8 @@ public:
       session->set_current_db("sys");
     }
 
-    oceanbase::share::schema::ObSchemaService::instance().drop_database(db_name.c_str());
-    return RC::SUCCESS;
+    auto &ddl = oceanbase::rootserver::ObDDLService::instance();
+    int ret = ddl.drop_database(db_name.c_str());
+    return (ret == 0) ? RC::SUCCESS : RC::INTERNAL;
   }
 };
