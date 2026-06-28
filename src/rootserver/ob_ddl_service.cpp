@@ -43,8 +43,13 @@ int ObDDLService::init(const char *base_dir) {
   // Register DDL replay handler (OB 4.4.2 REGISTER_TO_LOGSERVICE pattern)
   log_handler_->register_replay_handler(logservice::DDL_LOG_BASE_TYPE, this);
 
+  // Init SLOG (Storage Log for metadata)
+  std::string slog_dir = base_dir_ + "/slog";
+  ret = slog_logger_.init(slog_dir.c_str());
+  if (ret != 0) { LOG_WARN("Failed to init SLOG"); }
+
   is_inited_ = true;
-  LOG_INFO("ObDDLService PALF inited, base_dir=%s, ddl_ls_id=%ld", base_dir, DDL_LS_ID);
+  LOG_INFO("ObDDLService PALF + SLOG inited, base_dir=%s", base_dir);
   return 0;
 }
 
@@ -159,6 +164,14 @@ int ObDDLService::create_database(const char *db_name, uint64_t &database_id)
     LOG_WARN("ObDDLService: failed to create block_file at %s", block_file_path.c_str());
   }
 
+  // === SLOG write (metadata WAL, matching OB 4.4.2) ===
+  storage::ObStorageLogParam slog_param;
+  slog_param.tenant_id_ = 1;
+  slog_param.log_type_  = static_cast<int32_t>(storage::ObStorageLogType::SLOG_CREATE_DATABASE);
+  slog_param.data_      = db_name;
+  slog_param.data_len_  = name_len;
+  slog_logger_.write_log(slog_param);
+
   LOG_INFO("ObDDLService: CREATE DATABASE %s (id=%lu) via PALF CLOG, lsn=%lu",
            db_name, database_id, lsn.val_);
   return 0;
@@ -199,11 +212,18 @@ int ObDDLService::recover_schema()
     return 0;
   }
 
-  // Read committed logs via PALF handle and replay them
-  // ObLogService::replay_ls() iterates LogGroupEntry → calls ObLogHandler::replay()
-  // We need a replay handler registered for DDL_LOG_BASE_TYPE
+  // === SLOG replay (recover metadata state) ===
+  slog_logger_.replay(this, [](void *ctx, const storage::ObStorageLogEntry *entry) -> int {
+    auto *self = static_cast<ObDDLService *>(ctx);
+    if (entry->log_type_ == static_cast<int32_t>(storage::ObStorageLogType::SLOG_CREATE_DATABASE)) {
+      std::string db_name(entry->data_, entry->data_len_);
+      uint64_t db_id = 0;
+      self->ddl_operator_.create_database(db_name.c_str(), db_id);
+    }
+    return 0;
+  });
 
-  LOG_INFO("ObDDLService: PALF CLOG replay completed");
+  LOG_INFO("ObDDLService: PALF CLOG + SLOG replay completed");
   return 0;
 }
 

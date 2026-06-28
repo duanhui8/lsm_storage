@@ -8,6 +8,7 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_service.h */
 #include "rootserver/ob_ddl_operator.h"
 #include "storage/logservice/ob_log_service.h"
 #include "storage/logservice/ob_log_handler.h"
+#include "storage/slog/ob_storage_logger.h"
 #include <memory>
 
 namespace oceanbase {
@@ -42,11 +43,12 @@ public:
   logservice::ObLogService *get_log_service() { return log_service_.get(); }
 
 private:
-  static constexpr int64_t DDL_LS_ID = 1;    // Log Stream ID for DDL operations
+  static constexpr int64_t DDL_LS_ID = 1;
 
   ObDDLOperator ddl_operator_;
   std::unique_ptr<logservice::ObLogService> log_service_;
   logservice::ObLogHandler *log_handler_ = nullptr;
+  storage::ObStorageLogger slog_logger_;     // OB 4.4.2: SLOG for metadata
   std::string base_dir_;
   bool is_inited_ = false;
 };
