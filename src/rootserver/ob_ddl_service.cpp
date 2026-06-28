@@ -4,13 +4,11 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_service.cpp */
 
 #include "rootserver/ob_ddl_service.h"
 #include "share/schema/ob_schema_service.h"
-#include "storage/ddl/ob_ddl_clog.h"
+#include "storage/logservice/ob_log_base_header.h"
+#include "storage/logservice/palf/palf_handle.h"
 #include "common/log/log.h"
-#include <cstdio>
 #include <cstring>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 namespace oceanbase {
 namespace rootserver {
@@ -20,109 +18,130 @@ ObDDLService &ObDDLService::instance() {
   return s;
 }
 
-int ObDDLService::init(const char *log_dir) {
+int ObDDLService::init(const char *base_dir) {
   if (is_inited_) return 0;
-  log_dir_ = log_dir;
-  ::mkdir(log_dir_.c_str(), 0755);
+  base_dir_ = base_dir;
+  ::mkdir(base_dir_.c_str(), 0755);
+
+  // Init PALF-based log service (OB 4.4.2 pattern: ObLogService → PalfEnvImpl → PalfHandleImpl)
+  log_service_ = std::make_unique<logservice::ObLogService>();
+  int ret = log_service_->init(base_dir_.c_str());
+  if (ret != 0) return ret;
+  ret = log_service_->start();
+  if (ret != 0) return ret;
+
+  // Open Log Stream for DDL (LS_ID=1)
+  ret = log_service_->open_ls(DDL_LS_ID, log_handler_);
+  if (ret != 0) return ret;
+
+  // Register DDL replay handler (OB 4.4.2 REGISTER_TO_LOGSERVICE pattern)
+  log_handler_->register_replay_handler(logservice::DDL_LOG_BASE_TYPE, this);
+
   is_inited_ = true;
-  LOG_INFO("ObDDLService inited, log_dir=%s", log_dir_.c_str());
+  LOG_INFO("ObDDLService PALF inited, base_dir=%s, ddl_ls_id=%ld", base_dir, DDL_LS_ID);
   return 0;
 }
 
 int ObDDLService::create_database(const char *db_name, uint64_t &database_id)
 {
-  if (!is_inited_) return -1;
+  if (!is_inited_ || log_handler_ == nullptr) return -1;
 
-  // === CLOG write (WAL: write BEFORE memory) ===
-  // Format: [uint64: magic 0x44444C43 "CDDL"][uint64: type(1=create_db)]
-  //         [uint64: db_name_len] [db_name] [uint64: database_id]
-  std::string clog_path = log_dir_ + "/ddl_clog";
-  int fd = ::open(clog_path.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
-  if (fd >= 0) {
-    uint64_t magic = 0x44444C43; // "CDDL"
-    uint64_t type  = 1;           // DDL_CLOG_TYPE_CREATE_DATABASE
-    uint64_t name_len = strlen(db_name);
-    ::write(fd, &magic, sizeof(magic));
-    ::write(fd, &type, sizeof(type));
-    ::write(fd, &name_len, sizeof(name_len));
-    ::write(fd, db_name, name_len);
-    ::write(fd, &database_id, sizeof(database_id)); // 0 = to be assigned
-    ::fsync(fd);
-    ::close(fd);
-  }
+  // === CLOG via PALF (write BEFORE schema — WAL pattern) ===
+  // Build log buffer: [uint64: type=1] [uint64: name_len] [name]
+  uint64_t type = 1, name_len = strlen(db_name);
+  int64_t buf_len = sizeof(type) + sizeof(name_len) + name_len;
+  char *log_buf = static_cast<char *>(std::malloc(buf_len));
+  char *p = log_buf;
+  std::memcpy(p, &type, sizeof(type)); p += sizeof(type);
+  std::memcpy(p, &name_len, sizeof(name_len)); p += sizeof(name_len);
+  std::memcpy(p, db_name, name_len);
 
-  // === Schema write (in-memory) ===
-  int ret = ddl_operator_.create_database(db_name, database_id);
+  palf::LSN lsn;
+  int64_t scn = 0;
+  int ret = log_handler_->append(log_buf, buf_len,
+      logservice::DDL_LOG_BASE_TYPE, lsn, scn);
+  std::free(log_buf);
+  if (ret != 0) { LOG_ERROR("PALF append failed for CREATE DATABASE %s", db_name); return ret; }
+
+  // === Schema write (in-memory, after CLOG) ===
+  ret = ddl_operator_.create_database(db_name, database_id);
   if (ret != 0) return ret;
 
-  LOG_INFO("ObDDLService: CREATE DATABASE %s (id=%lu) + CLOG persisted", db_name, database_id);
+  LOG_INFO("ObDDLService: CREATE DATABASE %s (id=%lu) via PALF CLOG, lsn=%lu",
+           db_name, database_id, lsn.val_);
   return 0;
 }
 
 int ObDDLService::create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id)
 {
-  if (!is_inited_) return -1;
+  if (!is_inited_ || log_handler_ == nullptr) return -1;
 
-  // CLOG write
-  std::string clog_path = log_dir_ + "/ddl_clog";
-  int fd = ::open(clog_path.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
-  if (fd >= 0) {
-    uint64_t magic = 0x44444C43;
-    uint64_t type  = 3; // DDL_CLOG_TYPE_CREATE_TABLE
-    const char *name = table_schema.get_table_name();
-    uint64_t name_len = strlen(name);
-    uint64_t db_id = table_schema.get_database_id();
-    ::write(fd, &magic, sizeof(magic));
-    ::write(fd, &type, sizeof(type));
-    ::write(fd, &name_len, sizeof(name_len));
-    ::write(fd, name, name_len);
-    ::write(fd, &db_id, sizeof(db_id));
-    ::fsync(fd);
-    ::close(fd);
-  }
+  const char *tbl_name = table_schema.get_table_name();
+  uint64_t type = 3, name_len = strlen(tbl_name), db_id = table_schema.get_database_id();
+  int64_t buf_len = sizeof(type) + sizeof(name_len) + name_len + sizeof(db_id);
+  char *log_buf = static_cast<char *>(std::malloc(buf_len));
+  char *p = log_buf;
+  std::memcpy(p, &type, sizeof(type)); p += sizeof(type);
+  std::memcpy(p, &name_len, sizeof(name_len)); p += sizeof(name_len);
+  std::memcpy(p, tbl_name, name_len); p += name_len;
+  std::memcpy(p, &db_id, sizeof(db_id));
+
+  palf::LSN lsn;
+  int64_t scn = 0;
+  int ret = log_handler_->append(log_buf, buf_len,
+      logservice::DDL_LOG_BASE_TYPE, lsn, scn);
+  std::free(log_buf);
+  if (ret != 0) return ret;
 
   return ddl_operator_.create_table(table_schema, table_id);
 }
 
 int ObDDLService::recover_schema()
 {
-  std::string clog_path = log_dir_ + "/ddl_clog";
-  int fd = ::open(clog_path.c_str(), O_RDONLY);
-  if (fd < 0) {
-    LOG_INFO("ObDDLService: no CLOG file to replay — fresh start");
+  if (!is_inited_ || log_service_ == nullptr) return 0;
+
+  // PALF replay: read all committed log entries for DDL LS
+  int ret = log_service_->replay_ls(DDL_LS_ID);
+  if (ret != 0) {
+    LOG_WARN("ObDDLService: PALF replay returned %d", ret);
     return 0;
   }
 
-  int recovered = 0;
-  while (true) {
-    uint64_t magic = 0, type = 0, name_len = 0, db_id = 0;
-    ssize_t n = ::read(fd, &magic, sizeof(magic));
-    if (n != sizeof(magic)) break;
-    if (magic != 0x44444C43) { LOG_WARN("CLOG magic mismatch"); break; }
-    ::read(fd, &type, sizeof(type));
-    ::read(fd, &name_len, sizeof(name_len));
-    char buf[256] = {};
-    ::read(fd, buf, name_len);
-    ::read(fd, &db_id, sizeof(db_id));
+  // Read committed logs via PALF handle and replay them
+  // ObLogService::replay_ls() iterates LogGroupEntry → calls ObLogHandler::replay()
+  // We need a replay handler registered for DDL_LOG_BASE_TYPE
 
-    if (type == 1) { // CREATE DATABASE
-      uint64_t new_id = 0;
-      ddl_operator_.create_database(buf, new_id);
-      recovered++;
-      LOG_INFO("CLOG replay: CREATE DATABASE %s (id=%lu)", buf, new_id);
-    } else if (type == 3) { // CREATE TABLE
-      share::schema::ObTableSchema ts;
-      ts.set_table_name(buf);
-      ts.set_database_id(db_id);
-      uint64_t tid = 0;
-      ddl_operator_.create_table(ts, tid);
-      recovered++;
-      LOG_INFO("CLOG replay: CREATE TABLE %s (id=%lu)", buf, tid);
-    }
+  LOG_INFO("ObDDLService: PALF CLOG replay completed");
+  return 0;
+}
+
+int ObDDLService::replay(const void *buffer, int64_t nbytes,
+                          const palf::LSN &lsn, int64_t scn)
+{
+  (void)lsn; (void)scn;
+  if (buffer == nullptr || nbytes <= 0) return -1;
+
+  const char *p = static_cast<const char *>(buffer);
+  uint64_t type = 0, name_len = 0, db_id = 0;
+  std::memcpy(&type, p, sizeof(type)); p += sizeof(type);
+  std::memcpy(&name_len, p, sizeof(name_len)); p += sizeof(name_len);
+  char name[256] = {};
+  std::memcpy(name, p, name_len); p += name_len;
+
+  if (type == 1) {         // CREATE DATABASE
+    uint64_t new_id = 0;
+    ddl_operator_.create_database(name, new_id);
+    LOG_INFO("CLOG replay: CREATE DATABASE %s (id=%lu, lsn=%lu)", name, new_id, lsn.val_);
+  } else if (type == 3) {  // CREATE TABLE
+    std::memcpy(&db_id, p, sizeof(db_id));
+    share::schema::ObTableSchema ts;
+    ts.set_table_name(name);
+    ts.set_database_id(db_id);
+    uint64_t tid = 0;
+    ddl_operator_.create_table(ts, tid);
+    LOG_INFO("CLOG replay: CREATE TABLE %s (id=%lu, lsn=%lu)", name, tid, lsn.val_);
   }
-  ::close(fd);
-  LOG_INFO("ObDDLService: CLOG replay done, recovered %d DDL entries", recovered);
-  return recovered;
+  return 0;
 }
 
 }  // namespace rootserver

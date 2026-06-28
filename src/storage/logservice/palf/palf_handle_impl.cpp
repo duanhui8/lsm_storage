@@ -26,9 +26,34 @@ int PalfHandleImpl::init(int64_t palf_id, const char *log_dir, LogIOWorker *io_w
   epoch_ = 1;
 
   int ret = log_storage_.init(log_dir, PALF_BLOCK_SIZE);
-  if (ret != 0) return ret;
+  if (ret != 0) { return ret; }
 
+  // Scan for existing data (recovery path)
   is_inited_ = true;
+
+  // Check if there's existing data and scan to find end_lsn
+  LSN scan_lsn = log_storage_.get_begin_lsn();
+  char buf[4096];
+  LSN last_valid_lsn = scan_lsn;
+  while (true) {
+    ReadBuf rbuf(buf, sizeof(buf));
+    int64_t out_size = 0;
+    ret = log_storage_.read(scan_lsn, sizeof(buf), rbuf, out_size);
+    if (ret != 0 || out_size < static_cast<int64_t>(LogGroupEntryHeader::get_serialize_size())) break;
+
+    LogGroupEntryHeader hdr;
+    int64_t pos = 0;
+    ret = hdr.deserialize(buf, out_size, pos);
+    if (ret != 0 || !hdr.is_valid()) break;
+
+    last_valid_lsn = hdr.committed_end_lsn_;
+    if (last_valid_lsn.val_ <= scan_lsn.val_) break;
+    scan_lsn = last_valid_lsn;
+  }
+  end_lsn_ = last_valid_lsn;
+  max_lsn_ = last_valid_lsn;
+  log_id_ = (last_valid_lsn.val_ > 0) ? 2 : FIRST_VALID_LOG_ID;
+
   return 0;
 }
 
@@ -42,17 +67,32 @@ int PalfHandleImpl::load(int64_t palf_id, const char *log_dir, LogIOWorker *io_w
   block_id_t min_id, max_id;
   log_storage_.get_block_id_range(min_id, max_id);
 
-  if (min_id == max_id) {
-    // No data blocks: start fresh
+  if (min_id == max_id && min_id == 0 && log_storage_.get_begin_lsn().val_ == 0) {
+    // Truly no data: start fresh
     end_lsn_ = LSN(0);
     max_lsn_ = LSN(0);
     return 0;
   }
 
-  // Read from the last block to find the end
-  // Simplified: set end_lsn at start of last block + 1
-  end_lsn_ = LSN(min_id * PALF_BLOCK_SIZE);
-  max_lsn_ = end_lsn_;
+  // Scan to find the actual end_lsn by reading group entries
+  LSN scan_lsn = log_storage_.get_begin_lsn();
+  char buf[4096];
+  while (true) {
+    ReadBuf rbuf(buf, sizeof(buf));
+    int64_t out_size = 0;
+    int ret = log_storage_.read(scan_lsn, sizeof(buf), rbuf, out_size);
+    if (ret != 0 || out_size < LogGroupEntryHeader::get_serialize_size()) break;
+
+    LogGroupEntryHeader hdr;
+    int64_t pos = 0;
+    ret = hdr.deserialize(buf, out_size, pos);
+    if (ret != 0 || !hdr.is_valid()) break;
+
+    scan_lsn = hdr.committed_end_lsn_;
+    if (scan_lsn.val_ <= 0) break;
+  }
+  end_lsn_ = scan_lsn;
+  max_lsn_ = scan_lsn;
   return 0;
 }
 

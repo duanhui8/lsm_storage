@@ -42,14 +42,15 @@ int LogStorage::init(const char *log_dir, int64_t block_size)
       break; // No more blocks
     }
   }
-  // If no blocks exist, start from 0
+  // If no blocks exist, set max to -1 so create_next_block_ starts at 0
   if (min_block_id_ == LOG_INVALID_BLOCK_ID) {
     min_block_id_ = 0;
-    max_block_id_ = 0;
-    // Create first block
+    max_block_id_ = static_cast<block_id_t>(-1);
     int ret = create_next_block_();
     if (ret != 0) return ret;
-    cur_block_id_ = 0;
+    // Open the first block
+    ret = open_block_(0);
+    if (ret != 0) return ret;
   }
   is_inited_ = true;
   return 0;

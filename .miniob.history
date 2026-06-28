@@ -74,8 +74,6 @@ create table t1(id int  primary key,name char(100));
 CREATE TABLE t1(id int, name char(100));
 ### 2026-06-28 07:49:57.172
 show tables;
-### 2026-06-28 11:31:42.248
-create database test;
 ### 2026-06-28 11:32:18.201
 show databases;
 ### 2026-06-28 11:33:12.901
@@ -86,3 +84,5 @@ create database test2;
 drop database test2;
 ### 2026-06-28 13:53:09.640
 SHOW DATABASES;
+### 2026-06-28 14:42:00.729
+create database test;

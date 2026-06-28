@@ -19,9 +19,7 @@ int PalfEnvImpl::init(const char *base_dir)
   std::string cmd = "mkdir -p " + log_dir_;
   ::system(cmd.c_str());
 
-  int ret = io_worker_.init();
-  if (ret != 0) return ret;
-
+  // io_worker_.init() — skip for single-node (sync writes)
   is_inited_ = true;
   return 0;
 }

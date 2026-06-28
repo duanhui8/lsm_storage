@@ -21,9 +21,8 @@ public:
     CreateDatabaseStmt *create_db_stmt = static_cast<CreateDatabaseStmt *>(stmt);
     const string &db_name = create_db_stmt->db_name();
     uint64_t db_id = 0;
-    oceanbase::rootserver::ObDDLService ddl_service;
-    ddl_service.init();
-    int ret = ddl_service.create_database(db_name.c_str(), db_id);
+    auto &ddl = oceanbase::rootserver::ObDDLService::instance();
+    int ret = ddl.create_database(db_name.c_str(), db_id);
     return (ret == 0) ? RC::SUCCESS : RC::INTERNAL;
   }
 };
