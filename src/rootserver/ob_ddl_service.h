@@ -9,6 +9,8 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_service.h */
 #include "storage/logservice/ob_log_service.h"
 #include "storage/logservice/ob_log_handler.h"
 #include "storage/slog/ob_storage_logger.h"
+#include "storage/tablet/ob_tablet.h"
+#include "storage/compaction/ob_compaction.h"
 #include <memory>
 
 namespace oceanbase {
@@ -46,11 +48,13 @@ public:
 
 private:
   static constexpr int64_t DDL_LS_ID = 1;
+  static constexpr int64_t SYSTEM_TABLET_ID = 0;
 
   ObDDLOperator ddl_operator_;
   std::unique_ptr<logservice::ObLogService> log_service_;
   logservice::ObLogHandler *log_handler_ = nullptr;
-  storage::ObStorageLogger slog_logger_;     // OB 4.4.2: SLOG for metadata
+  storage::ObStorageLogger slog_logger_;
+  storage::ObTablet *system_tablet_ = nullptr;  // __all_database system tablet (LSM)
   std::string base_dir_;
   bool is_inited_ = false;
 };
