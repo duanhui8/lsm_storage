@@ -6,9 +6,15 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_service.cpp */
 #include "share/schema/ob_schema_service.h"
 #include "storage/logservice/ob_log_base_header.h"
 #include "storage/logservice/palf/palf_handle.h"
+#include "storage/blocksstable/ob_sstable_builder.h"
+#include "storage/blocksstable/ob_block_header.h"
+#include "storage/blocksstable/ob_data_store_desc.h"
 #include "common/log/log.h"
 #include <cstring>
+#include <cstdio>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace oceanbase {
 namespace rootserver {
@@ -66,6 +72,92 @@ int ObDDLService::create_database(const char *db_name, uint64_t &database_id)
   // === Schema write (in-memory, after CLOG) ===
   ret = ddl_operator_.create_database(db_name, database_id);
   if (ret != 0) return ret;
+
+  // === Create system tablet SSTable (baseline) ===
+  // OB 4.4.2: each database has a system tablet stored in block_file
+  std::string sstable_dir = base_dir_ + "/sstable/block";
+  std::string mkdir_cmd = "mkdir -p " + sstable_dir;
+  ::system(mkdir_cmd.c_str());
+  std::string block_file_path = sstable_dir + "/block_file";
+  std::string meta_file_path = sstable_dir + "/db_" + std::to_string(database_id) + ".meta";
+
+  // Write a single macro block with DB metadata as micro block
+  int fd = ::open(block_file_path.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+  if (fd >= 0) {
+    // Build a minimal macro block
+    blocksstable::ObMacroBlockCommonHeader common_hdr;
+    blocksstable::ObSSTableMacroBlockHeader sstable_hdr;
+    blocksstable::ObMicroBlockHeader micro_hdr;
+
+    // --- Micro block data: serialize ObDatabaseSchema ---
+    share::schema::ObDatabaseSchema db_schema;
+    db_schema.set_database_id(database_id);
+    db_schema.set_database_name(db_name);
+    std::string schema_buf;
+    schema_buf.resize(db_schema.get_serialize_size());
+    int64_t pos = 0;
+    db_schema.serialize(const_cast<char *>(schema_buf.data()), schema_buf.size(), pos);
+
+    // --- Micro block header ---
+    micro_hdr.reset();
+    micro_hdr.magic_ = blocksstable::ObMicroBlockHeader::MICRO_BLOCK_HEADER_MAGIC; // 1005
+    micro_hdr.row_count_ = 1;
+    micro_hdr.column_count_ = 1;
+    micro_hdr.data_length_ = static_cast<int32_t>(schema_buf.size());
+    micro_hdr.data_zlength_ = micro_hdr.data_length_;
+    micro_hdr.row_store_type_ = 0; // FLAT
+    micro_hdr.header_size_ = sizeof(blocksstable::ObMicroBlockHeader);
+    micro_hdr.row_index_offset_ = static_cast<uint32_t>(schema_buf.size());
+
+    // --- Write macro block to block_file ---
+    // Layout: [common_hdr(24B)][sstable_hdr(~92B)][micro_hdr(~64B)][data]
+    static const int64_t MACRO_SIZE = 2 * 1024 * 1024; // 2MB
+    char *macro_buf = static_cast<char *>(std::calloc(1, MACRO_SIZE));
+    int64_t offset = 0;
+
+    common_hdr.header_size_ = sizeof(blocksstable::ObMacroBlockCommonHeader);
+    common_hdr.magic_ = blocksstable::MACRO_BLOCK_COMMON_HEADER_MAGIC; // 1001
+    common_hdr.version_ = blocksstable::MACRO_BLOCK_COMMON_HEADER_VERSION; // 1
+    common_hdr.attr_ = static_cast<int32_t>(blocksstable::MacroBlockType::SSTableData);
+
+    sstable_hdr.fixed_header_.magic_ = blocksstable::SSTABLE_MACRO_BLOCK_HEADER_MAGIC; // 1007
+    sstable_hdr.fixed_header_.tablet_id_ = database_id;
+    sstable_hdr.fixed_header_.column_count_ = 1;
+    sstable_hdr.fixed_header_.row_count_ = 1;
+    sstable_hdr.fixed_header_.occupy_size_ = static_cast<int32_t>(schema_buf.size());
+    sstable_hdr.fixed_header_.micro_block_count_ = 1;
+    sstable_hdr.fixed_header_.row_store_type_ = 0;
+
+    // First write headers, then micro block
+    int64_t micro_offset = sizeof(blocksstable::ObMacroBlockCommonHeader)
+                         + sizeof(blocksstable::ObSSTableMacroBlockHeader::FixedHeader);
+    sstable_hdr.fixed_header_.micro_block_data_offset_ = static_cast<int32_t>(micro_offset);
+    sstable_hdr.fixed_header_.micro_block_data_size_ = static_cast<int32_t>(
+        sizeof(blocksstable::ObMicroBlockHeader) + schema_buf.size());
+    sstable_hdr.fixed_header_.header_size_ = sizeof(blocksstable::ObSSTableMacroBlockHeader::FixedHeader);
+
+    common_hdr.serialize(macro_buf, MACRO_SIZE, offset);
+    sstable_hdr.serialize(macro_buf, MACRO_SIZE, offset);
+    micro_hdr.serialize(macro_buf, MACRO_SIZE, offset);
+    std::memcpy(macro_buf + offset, schema_buf.data(), schema_buf.size());
+    offset += schema_buf.size();
+
+    // Set common header payload info
+    int64_t payload_size = offset - sizeof(blocksstable::ObMacroBlockCommonHeader);
+    blocksstable::ObMacroBlockCommonHeader *hdr_ptr =
+        reinterpret_cast<blocksstable::ObMacroBlockCommonHeader *>(macro_buf);
+    hdr_ptr->payload_size_ = static_cast<int32_t>(payload_size);
+
+    ::write(fd, macro_buf, MACRO_SIZE);
+    ::fsync(fd);
+    ::close(fd);
+    std::free(macro_buf);
+
+    LOG_INFO("ObDDLService: created SSTable block for database %s (id=%lu) at %s",
+             db_name, database_id, block_file_path.c_str());
+  } else {
+    LOG_WARN("ObDDLService: failed to create block_file at %s", block_file_path.c_str());
+  }
 
   LOG_INFO("ObDDLService: CREATE DATABASE %s (id=%lu) via PALF CLOG, lsn=%lu",
            db_name, database_id, lsn.val_);

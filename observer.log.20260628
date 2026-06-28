@@ -328,3 +328,31 @@ Finish dump configuration
 [2026-06-28 14:42:00.737459 pid:23607 tid:769f7118a7c0 ctx:0 INFO: execute@command_executor.cpp:167] >> DDL executed (via SchemaService). rc=0
 [2026-06-28 14:42:00.737475 pid:23607 tid:769f7118a7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
 [2026-06-28 14:42:00.737604 pid:23607 tid:769f7118a7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 14:55:11.114722 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 14:55:11.120493 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:41] >> ObDDLService PALF inited, base_dir=miniob/store, ddl_ls_id=1
+[2026-06-28 14:55:11.120551 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:114] >> ObDDLService: PALF CLOG replay completed
+[2026-06-28 14:55:11.120640 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: create_database@ob_ddl_service.cpp:70] >> ObDDLService: CREATE DATABASE sys (id=1) via PALF CLOG, lsn=0
+[2026-06-28 14:55:11.120672 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
+[2026-06-28 14:55:11.120689 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 14:55:19.048117 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 14:56:02.281158 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: create_database@ob_ddl_service.cpp:70] >> ObDDLService: CREATE DATABASE test (id=2) via PALF CLOG, lsn=83
+[2026-06-28 14:56:02.281292 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: execute@command_executor.cpp:167] >> DDL executed (via SchemaService). rc=0
+[2026-06-28 14:56:04.247290 pid:34590 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 14:58:06.878672 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 14:58:06.883470 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:41] >> ObDDLService PALF inited, base_dir=miniob/store, ddl_ls_id=1
+[2026-06-28 14:58:06.883569 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:134] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=0)
+[2026-06-28 14:58:06.883605 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:134] >> CLOG replay: CREATE DATABASE test (id=2, lsn=83)
+[2026-06-28 14:58:06.883620 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:114] >> ObDDLService: PALF CLOG replay completed
+[2026-06-28 14:58:06.883667 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
+[2026-06-28 14:58:06.883683 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 14:58:12.005142 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
