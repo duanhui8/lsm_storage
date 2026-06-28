@@ -243,3 +243,11 @@ Finish dump configuration
 [2026-06-28 12:21:48.858517 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
 [2026-06-28 12:21:48.858552 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:215] >> Successfully init utility
 [2026-06-28 12:21:52.223610 pid:55013 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 13:48:42.924695 pid:25425 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:193] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 13:48:42.925380 pid:25425 tid:7ffff702e7c0 ctx:0 INFO: init_global_objects@init.cpp:145] >> Global objects initialized successfully
+[2026-06-28 13:48:42.925418 pid:25425 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:208] >> Successfully init utility

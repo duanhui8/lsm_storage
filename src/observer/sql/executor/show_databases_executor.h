@@ -22,6 +22,10 @@ public:
     vector<string> db_names;
     oceanbase::share::schema::ObSchemaService::instance().get_all_databases(db_names);
 
+    TupleSchema tuple_schema;
+    tuple_schema.append_cell(TupleCellSpec("", "Database", "Database"));
+    sql_result->set_tuple_schema(tuple_schema);
+
     auto oper = new StringListPhysicalOperator;
     for (const string &s : db_names) oper->append(s);
     sql_result->set_operator(unique_ptr<PhysicalOperator>(oper));

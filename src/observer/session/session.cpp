@@ -23,5 +23,8 @@ void Session::set_current_db(const string &dbname)
 
 bool Session::is_trx_multi_operation_mode() const { return trx_multi_operation_mode_; }
 void Session::set_trx_multi_operation_mode(bool m) { trx_multi_operation_mode_ = m; }
-Trx *Session::current_trx() { return current_trx_; }
+Trx *Session::current_trx() {
+  if (current_trx_ == nullptr) current_trx_ = new Trx();
+  return current_trx_;
+}
 void Session::set_current_trx(Trx *trx) { current_trx_ = trx; }
