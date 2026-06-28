@@ -19,6 +19,7 @@ enum ObLogBaseType {
   TRANS_SERVICE_LOG_BASE_TYPE = 1,     // Transaction service (put/delete)
   TABLET_OP_LOG_BASE_TYPE = 2,         // Tablet operations (memtable writes)
   STORAGE_SCHEMA_LOG_BASE_TYPE = 3,    // Storage schema changes
+  DDL_LOG_BASE_TYPE = 5,              // DDL operations (from OB 4.4.2)
   GC_LS_LOG_BASE_TYPE = 9,            // LS garbage collection
   MAJOR_FREEZE_LOG_BASE_TYPE = 10,    // Major freeze trigger
   PADDING_LOG_BASE_TYPE = 25,         // Padding entry

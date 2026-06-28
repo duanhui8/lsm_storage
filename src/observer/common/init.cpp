@@ -27,6 +27,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "share/schema/ob_schema_service.h"
+#include "rootserver/ob_ddl_service.h"
 
 using namespace common;
 
@@ -134,10 +135,17 @@ int prepare_init_seda()
 
 int init_global_objects(ProcessParam *process_param, Ini &properties)
 {
-  // Init schema service (sys database)
+  // Init DDL Service + CLOG recovery
+  auto &ddl = oceanbase::rootserver::ObDDLService::instance();
+  ddl.init("miniob/store");
+  int recovered = ddl.recover_schema();
+
+  // Create sys database if not already present (from recovery)
   auto &schema = oceanbase::share::schema::ObSchemaService::instance();
-  uint64_t sys_id = 0;
-  schema.create_database("sys", sys_id);
+  if (recovered == 0 || schema.get_database_schema("sys") == nullptr) {
+    uint64_t sys_id = 0;
+    ddl.create_database("sys", sys_id);
+  }
 
   // Set default session to sys
   Session::default_session().set_current_db("sys");

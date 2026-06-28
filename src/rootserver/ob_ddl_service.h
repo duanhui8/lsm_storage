@@ -19,14 +19,22 @@ public:
   ObDDLService() = default;
   ~ObDDLService() = default;
 
-  int init();
+  int init(const char *log_dir = "miniob/store");
 
   /** create_database — full CREATE DATABASE flow */
   int create_database(const char *db_name, uint64_t &database_id);
   int create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id);
 
+  /** Replay CLOG on startup to recover schema */
+  int recover_schema();
+
+  /** Get singleton */
+  static ObDDLService &instance();
+
 private:
   ObDDLOperator ddl_operator_;
+  std::string log_dir_;
+  bool is_inited_ = false;
 };
 
 }  // namespace rootserver

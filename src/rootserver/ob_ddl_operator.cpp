@@ -7,7 +7,12 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_operator.cpp */
 
 namespace oceanbase { namespace rootserver {
 int ObDDLOperator::create_database(const char *db_name, uint64_t &database_id) {
-  return share::schema::ObSchemaService::instance().create_database(db_name, database_id);
+  auto &schema = share::schema::ObSchemaService::instance();
+  // Conflict check: return error if database already exists
+  if (schema.get_database_schema(db_name) != nullptr) {
+    return -1; // OB_ERR_DB_EXIST
+  }
+  return schema.create_database(db_name, database_id);
 }
 int ObDDLOperator::create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id) {
   int ret = share::schema::ObSchemaService::instance().create_table(table_schema);
