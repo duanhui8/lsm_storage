@@ -4,6 +4,7 @@
 class ProjectVecPhysicalOperator : public PhysicalOperator {
 public:
   ProjectVecPhysicalOperator() {}
+  ProjectVecPhysicalOperator(vector<unique_ptr<Expression>>&&) {}
   virtual ~ProjectVecPhysicalOperator() = default;
   PhysicalOperatorType type() const override { return PhysicalOperatorType::PROJECT_VEC; }
   RC open(Trx *) override { return RC::SUCCESS; }

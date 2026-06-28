@@ -84,19 +84,9 @@ RC ResolveStage::handle_request(SQLStageEvent *sql_event)
       break;
   }
 
-  // ★ 获取当前数据库
-  // MiniOB 目前只支持单数据库，"当前库"在 Session 中保存
+  // Db removed — SchemaService is stateless. Pass nullptr as db placeholder.
   Db *db = nullptr;
-  if (needs_db) {
-    db = session_event->session()->get_current_db();
-    if (nullptr == db) {
-      LOG_ERROR("cannot find current db");
-      rc = RC::SCHEMA_DB_NOT_EXIST;
-      sql_result->set_return_code(rc);
-      sql_result->set_state_string("no db selected");
-      return rc;
-    }
-  }
+  (void)needs_db;
 
   // ★ 工厂方法：根据 AST 类型创建对应的 Stmt 对象
   // Stmt::create_stmt() 内部是一个 switch-case，根据 ParsedSqlNode::flag 分发：

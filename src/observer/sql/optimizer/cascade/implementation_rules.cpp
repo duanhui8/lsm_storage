@@ -41,15 +41,8 @@ void LogicalGetToPhysicalSeqScan::transform(OperatorNode* input,
                          OptimizerContext *context) const {
   TableGetLogicalOperator* table_get_oper = dynamic_cast<TableGetLogicalOperator*>(input);
 
-  vector<unique_ptr<Expression>> &log_preds = table_get_oper->predicates();
-  vector<unique_ptr<Expression>> phys_preds;
-  for (auto &pred : log_preds) {
-    phys_preds.push_back(pred->copy());
-  }
-
-  Table *table = table_get_oper->table();
-  auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper->read_write_mode());
-  table_scan_oper->set_predicates(std::move(phys_preds));
+  void *table = table_get_oper->table();
+  auto table_scan_oper = new TableScanPhysicalOperator(table, ReadWriteMode::READ_WRITE);
   auto oper = unique_ptr<OperatorNode>(table_scan_oper);
 
   transformed->emplace_back(std::move(oper));
@@ -96,8 +89,8 @@ void LogicalInsertToInsert::transform(OperatorNode* input,
                          OptimizerContext *context) const {
   InsertLogicalOperator* insert_oper = dynamic_cast<InsertLogicalOperator*>(input);
 
-  Table                  *table           = insert_oper->table();
-  vector<Value>          &values          = insert_oper->values();
+  void                   *table           = insert_oper->table();
+  auto                    values          = insert_oper->values();
   auto insert_phy_oper = make_unique<InsertPhysicalOperator>(table, std::move(values));
 
   transformed->emplace_back(std::move(insert_phy_oper));

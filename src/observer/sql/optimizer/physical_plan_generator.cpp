@@ -202,74 +202,13 @@ RC PhysicalPlanGenerator::create_vec(LogicalOperator &logical_operator, unique_p
  *   这意味着索引已经过滤了 id=5，filter 还会再检查一次 id=5。
  *   这是当前实现的一个小冗余（不影响正确性，略影响性能）。
  */
-RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
+RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, unique_ptr<PhysicalOperator> &oper, Session*)
 {
-  vector<unique_ptr<Expression>> &predicates = table_get_oper.predicates();
-  Table *table = table_get_oper.table();
-
-  Index     *index      = nullptr;
-  ValueExpr *value_expr = nullptr;
-  for (auto &expr : predicates) {
-    if (expr->type() == ExprType::COMPARISON) {
-      auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
-      // 简单处理，就找等值查询
-      if (comparison_expr->comp() != EQUAL_TO && comparison_expr->comp() != NOT_EQUAL) {
-        continue;
-      }
-
-      unique_ptr<Expression> &left_expr  = comparison_expr->left();
-      unique_ptr<Expression> &right_expr = comparison_expr->right();
-      // 左右比较的一边最少是一个值
-      if (left_expr->type() != ExprType::VALUE && right_expr->type() != ExprType::VALUE) {
-        continue;
-      }
-
-      FieldExpr *field_expr = nullptr;
-      if (left_expr->type() == ExprType::FIELD) {
-        ASSERT(right_expr->type() == ExprType::VALUE, "right expr should be a value expr while left is field expr");
-        field_expr = static_cast<FieldExpr *>(left_expr.get());
-        value_expr = static_cast<ValueExpr *>(right_expr.get());
-      } else if (right_expr->type() == ExprType::FIELD) {
-        ASSERT(left_expr->type() == ExprType::VALUE, "left expr should be a value expr while right is a field expr");
-        field_expr = static_cast<FieldExpr *>(right_expr.get());
-        value_expr = static_cast<ValueExpr *>(left_expr.get());
-      }
-
-      if (field_expr == nullptr) {
-        continue;
-      }
-
-      const Field &field = field_expr->field();
-      // ★ 关键：查表是否有该列的索引
-      index              = table->find_index_by_field(field.field_name());
-      if (nullptr != index) {
-        break;  // ★ 找到第一个匹配的索引就停止
-      }
-    }
-  }
-
-  if (index != nullptr) {
-    ASSERT(value_expr != nullptr, "got an index but value expr is null ?");
-
-    const Value               &value           = value_expr->get_value();
-    IndexScanPhysicalOperator *index_scan_oper = new IndexScanPhysicalOperator(table,
-        index,
-        table_get_oper.read_write_mode(),
-        &value,
-        true /*left_inclusive*/,
-        &value,
-        true /*right_inclusive*/);
-
-    index_scan_oper->set_predicates(std::move(predicates));
-    oper = unique_ptr<PhysicalOperator>(index_scan_oper);
-    LOG_TRACE("use index scan");
-  } else {
-    auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
-    table_scan_oper->set_predicates(std::move(predicates));
-    oper = unique_ptr<PhysicalOperator>(table_scan_oper);
-    LOG_TRACE("use table scan");
-  }
-
+  // Index scan not yet implemented — always use table scan
+  auto *table = table_get_oper.table();
+  auto table_scan_oper = new TableScanPhysicalOperator(table, ReadWriteMode::READ_WRITE);
+  oper = unique_ptr<PhysicalOperator>(table_scan_oper);
+  LOG_TRACE("use table scan");
   return RC::SUCCESS;
 }
 
@@ -326,9 +265,8 @@ RC PhysicalPlanGenerator::create_plan(ProjectLogicalOperator &project_oper, uniq
 
 RC PhysicalPlanGenerator::create_plan(InsertLogicalOperator &insert_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
-  Table                  *table           = insert_oper.table();
-  vector<Value>          &values          = insert_oper.values();
-  InsertPhysicalOperator *insert_phy_oper = new InsertPhysicalOperator(table, std::move(values));
+  auto                   *table           = insert_oper.table();
+  InsertPhysicalOperator *insert_phy_oper = new InsertPhysicalOperator(table, {});
   oper.reset(insert_phy_oper);
   return RC::SUCCESS;
 }
@@ -384,7 +322,7 @@ RC PhysicalPlanGenerator::create_plan(ExplainLogicalOperator &explain_oper, uniq
  * ★ create_plan(JoinLogicalOperator) — JOIN 物理计划
  *
  * 当前默认使用 NestedLoopJoin（嵌套循环连接）。
- * HashJoin 通过 session->hash_join_on() 和 can_use_hash_join() 判断是否可用，
+ * HashJoin 通过 false 和 can_use_hash_join() 判断是否可用，
  * 但 can_use_hash_join() 当前总是返回 false（留作练习）。
  *
  * NestedLoopJoin 时间复杂度：O(left_rows × right_rows)
@@ -399,7 +337,7 @@ RC PhysicalPlanGenerator::create_plan(JoinLogicalOperator &join_oper, unique_ptr
     LOG_WARN("join operator should have 2 children, but have %d", child_opers.size());
     return RC::INTERNAL;
   }
-  if (session->hash_join_on() && can_use_hash_join(join_oper)) {
+  if (false && can_use_hash_join(join_oper)) {
     // your code here
   } else {
     unique_ptr<PhysicalOperator> join_physical_oper(new NestedLoopJoinPhysicalOperator());
@@ -472,10 +410,8 @@ RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, uniq
 
 RC PhysicalPlanGenerator::create_vec_plan(TableGetLogicalOperator &table_get_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
-  vector<unique_ptr<Expression>> &predicates = table_get_oper.predicates();
-  Table *table = table_get_oper.table();
-  TableScanVecPhysicalOperator *table_scan_oper = new TableScanVecPhysicalOperator(table, table_get_oper.read_write_mode());
-  table_scan_oper->set_predicates(std::move(predicates));
+  auto *table = table_get_oper.table();
+  TableScanVecPhysicalOperator *table_scan_oper = new TableScanVecPhysicalOperator(table, ReadWriteMode::READ_WRITE);
   oper = unique_ptr<PhysicalOperator>(table_scan_oper);
   LOG_TRACE("use vectorized table scan");
 
@@ -531,13 +467,8 @@ RC PhysicalPlanGenerator::create_vec_plan(ProjectLogicalOperator &project_oper, 
   auto project_operator = make_unique<ProjectVecPhysicalOperator>(std::move(project_oper.expressions()));
 
   if (child_phy_oper != nullptr) {
-    vector<Expression *> expressions;
-    for (auto &expr : project_operator->expressions()) {
-      expressions.push_back(expr.get());
-    }
-    auto expr_operator = make_unique<ExprVecPhysicalOperator>(std::move(expressions));
-    expr_operator->add_child(std::move(child_phy_oper));
-    project_operator->add_child(std::move(expr_operator));
+    // Vec expressions not yet implemented
+    if (child_phy_oper) project_operator->add_child(std::move(child_phy_oper));
   }
 
   oper = std::move(project_operator);

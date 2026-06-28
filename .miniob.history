@@ -30,8 +30,6 @@ USE sys;
 USE testdb;
 ### 2026-06-25 18:28:11.043
 DROP DATABASE testdb;
-### 2026-06-25 18:28:11.276
-SHOW DATABASES;
 ### 2026-06-25 18:34:05.830
 DROP DATABASE sys;
 ### 2026-06-25 19:06:08.985
@@ -64,8 +62,6 @@ delete from t2 where name='jack';
 select * from t2;
 ### 2026-06-28 06:23:23.803
 show  tables;
-### 2026-06-28 06:37:42.546
-show databases;
 ### 2026-06-28 06:37:50.352
 use test;
 ### 2026-06-28 06:38:20.325
@@ -78,5 +74,15 @@ create table t1(id int  primary key,name char(100));
 CREATE TABLE t1(id int, name char(100));
 ### 2026-06-28 07:49:57.172
 show tables;
-### 2026-06-28 07:50:40.370
+### 2026-06-28 11:31:42.248
 create database test;
+### 2026-06-28 11:32:18.201
+show databases;
+### 2026-06-28 11:33:12.901
+create database test1;
+### 2026-06-28 12:20:41.353
+create database test2;
+### 2026-06-28 12:21:38.646
+drop database test2;
+### 2026-06-28 12:21:51.273
+SHOW DATABASES;

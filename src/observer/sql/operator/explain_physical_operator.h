@@ -24,7 +24,7 @@ class ExplainPhysicalOperator : public PhysicalOperator
 {
 public:
   ExplainPhysicalOperator()          = default;
-  virtual ~ExplainPhysicalOperator() = default;
+  virtual ~ExplainPhysicalOperator();
 
   PhysicalOperatorType type() const override { return PhysicalOperatorType::EXPLAIN; }
 

@@ -66,7 +66,7 @@ class Expression
 public:
   Expression() = default;
 
-  virtual ~Expression() = default;
+  virtual ~Expression();
 
   /**
    * @brief 复制表达式

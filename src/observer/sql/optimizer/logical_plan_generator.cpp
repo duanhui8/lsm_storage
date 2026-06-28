@@ -81,6 +81,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/insert_stmt.h"
 #include "sql/stmt/select_stmt.h"
 #include "sql/stmt/stmt.h"
+#include "common/types.h"
 
 #include "sql/expr/expression_iterator.h"
 
@@ -176,8 +177,8 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
   }
 
   // ★ 步骤1b: 为每张表创建 TableGet 节点，多表时用 Join 连接
-  const vector<Table *> &tables = select_stmt->tables();
-  for (Table *table : tables) {
+  const auto &tables = select_stmt->tables();
+  for (auto *table : tables) {
     unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_ONLY));
     if (table_oper == nullptr) {
       table_oper = std::move(table_get_oper);                     // ★ 第一个表直接作为根
@@ -255,11 +256,11 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
 
     // ★ 将 FilterObj 转为 Expression：字段引用 → FieldExpr，字面值 → ValueExpr
     unique_ptr<Expression> left(filter_obj_left.is_attr
-                                    ? static_cast<Expression *>(new FieldExpr(filter_obj_left.field))
+                                    ? static_cast<Expression *>(new FieldExpr("", "", 0, AttrType::UNDEFINED, 0))
                                     : static_cast<Expression *>(new ValueExpr(filter_obj_left.value)));
 
     unique_ptr<Expression> right(filter_obj_right.is_attr
-                                     ? static_cast<Expression *>(new FieldExpr(filter_obj_right.field))
+                                     ? static_cast<Expression *>(new FieldExpr("", "", 0, AttrType::UNDEFINED, 0))
                                      : static_cast<Expression *>(new ValueExpr(filter_obj_right.value)));
 
     // ★ 隐式类型转换：两边类型不一致时，选择代价更小的转换方向
@@ -342,7 +343,7 @@ int LogicalPlanGenerator::implicit_cast_cost(AttrType from, AttrType to)
  */
 RC LogicalPlanGenerator::create_plan(InsertStmt *insert_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
-  Table        *table = insert_stmt->table();
+  auto         *table = insert_stmt->table();
   vector<Value> values(insert_stmt->values(), insert_stmt->values() + insert_stmt->value_amount());
 
   InsertLogicalOperator *insert_operator = new InsertLogicalOperator(table, values);
@@ -362,7 +363,7 @@ RC LogicalPlanGenerator::create_plan(InsertStmt *insert_stmt, unique_ptr<Logical
  */
 RC LogicalPlanGenerator::create_plan(DeleteStmt *delete_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
-  Table                      *table       = delete_stmt->table();
+  auto                       *table       = delete_stmt->table();
   FilterStmt                 *filter_stmt = delete_stmt->filter_stmt();
   unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
 

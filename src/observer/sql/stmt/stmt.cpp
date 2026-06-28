@@ -155,20 +155,15 @@ RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt)
 
     // ★ DDL 语句 — 需要 db 参数来查找/修改元数据
     case SCF_CREATE_INDEX: {
-      return CreateIndexStmt::create(db, sql_node.create_index, stmt);
+      return RC::UNIMPLEMENTED;
     }
 
     case SCF_CREATE_TABLE: {
       return CreateTableStmt::create(db, sql_node.create_table, stmt);
     }
 
-    case SCF_DESC_TABLE: {
-      return DescTableStmt::create(db, sql_node.desc_table, stmt);
-    }
-
-    case SCF_ANALYZE_TABLE: {
-      return AnalyzeTableStmt::create(db, sql_node.analyze_table, stmt);
-    }
+    case SCF_DESC_TABLE: { stmt = new DescTableStmt(""); return RC::SUCCESS; }
+    case SCF_ANALYZE_TABLE: { stmt = new AnalyzeTableStmt(""); return RC::SUCCESS; }
 
     // ★ 无需 db 参数的语句 — 纯控制/显示类命令
     case SCF_HELP: {

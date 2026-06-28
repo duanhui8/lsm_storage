@@ -51,6 +51,8 @@ public:
   void set_hash_join(bool) {}
   void set_use_cascade(bool) {}
   void destroy_trx() { current_trx_ = nullptr; }
+  bool use_cascade() const { return false; }
+  void set_used_chunk_mode(bool) {}
 
 private:
   string   current_db_name_;

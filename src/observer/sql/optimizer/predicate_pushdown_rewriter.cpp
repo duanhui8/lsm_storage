@@ -80,8 +80,8 @@ RC PredicatePushdownRewriter::rewrite(unique_ptr<LogicalOperator> &oper, bool &c
     return rc;  // ★ 子节点不是 TableGet，不能下推（如子节点是 Join）
   }
 
-  auto table_get_oper = static_cast<TableGetLogicalOperator *>(child_oper.get());
-
+  // auto table_get_oper = static_cast<TableGetLogicalOperator *>(child_oper.get());
+  (void)child_oper;
   vector<unique_ptr<Expression>> &predicate_oper_exprs = oper->expressions();
   if (predicate_oper_exprs.size() != 1) {
     return rc;
@@ -107,7 +107,7 @@ RC PredicatePushdownRewriter::rewrite(unique_ptr<LogicalOperator> &oper, bool &c
 
   if (!pushdown_exprs.empty()) {
     change_made = true;
-    table_get_oper->set_predicates(std::move(pushdown_exprs));  // ★ 把条件设置到 TableGet 上
+    // table_get_oper->set_predicates(std::move(pushdown_exprs));  // Not yet implemented
   }
   return rc;
 }

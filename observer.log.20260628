@@ -200,3 +200,46 @@ Finish dump configuration
 [2026-06-28 07:50:41.991189 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
 [2026-06-28 07:50:41.991218 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
 [2026-06-28 07:50:41.996911 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 11:28:47.559263 pid:25634 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:200] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 11:28:47.561055 pid:25634 tid:7ffff702c7c0 ctx:0 INFO: create_db@default_handler.cpp:143] >> Create database via SchemaService. name=sys, id=1
+[2026-06-28 11:28:47.563641 pid:25634 tid:7ffff702c7c0 ctx:0 INFO: open_all_tables@db.cpp:172] >> All table have been opened. num=0
+[2026-06-28 11:28:47.563694 pid:25634 tid:7ffff702c7c0 ctx:0 INFO: init@db.cpp:83] >> OB store init with miniob/db/sys success, 0 tables opened
+[2026-06-28 11:28:47.563771 pid:25634 tid:7ffff702c7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 11:28:47.563821 pid:25634 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:215] >> Successfully init utility
+[2026-06-28 11:29:09.137866 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 11:32:04.248945 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: create_db@default_handler.cpp:143] >> Create database via SchemaService. name=test, id=2
+[2026-06-28 11:32:04.249184 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
+[2026-06-28 11:32:04.249253 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 11:32:11.313690 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 11:32:20.391794 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 12:20:30.023718 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: create_db@default_handler.cpp:143] >> Create database via SchemaService. name=test1, id=3
+[2026-06-28 12:20:35.825919 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
+[2026-06-28 12:20:35.826050 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 12:20:36.583901 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 12:21:21.283317 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: create_db@default_handler.cpp:143] >> Create database via SchemaService. name=test2, id=4
+[2026-06-28 12:21:25.834144 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
+[2026-06-28 12:21:25.834261 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 12:21:26.312336 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 12:21:33.254183 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 12:21:40.215839 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: drop_db@default_handler.cpp:176] >> Dropped db (via SchemaService): test2
+[2026-06-28 12:21:40.215935 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
+[2026-06-28 12:21:40.215952 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 12:21:40.225577 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 12:21:44.190317 pid:25634 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 12:21:48.857161 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:200] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 12:21:48.857497 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: create_db@default_handler.cpp:143] >> Create database via SchemaService. name=sys, id=1
+[2026-06-28 12:21:48.858391 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: open_all_tables@db.cpp:172] >> All table have been opened. num=0
+[2026-06-28 12:21:48.858441 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: init@db.cpp:83] >> OB store init with miniob/db/sys success, 0 tables opened
+[2026-06-28 12:21:48.858517 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 12:21:48.858552 pid:55013 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:215] >> Successfully init utility
+[2026-06-28 12:21:52.223610 pid:55013 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

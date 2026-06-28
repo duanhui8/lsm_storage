@@ -1,6 +1,7 @@
 /* Stub */
 #pragma once
 #include "sql/operator/physical_operator.h"
+#include "common/types.h"
 class TableScanVecPhysicalOperator : public PhysicalOperator {
 public:
   TableScanVecPhysicalOperator(void *, ReadWriteMode) {}

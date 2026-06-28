@@ -49,11 +49,10 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/sys/rc.h"
 #include "sql/stmt/stmt.h"
+#include "sql/expr/expression.h"
 
-// class FieldMeta; (removed)
 class FilterStmt;
 class Db;
-// class Table; (removed)
 
 class SelectStmt : public Stmt
 {

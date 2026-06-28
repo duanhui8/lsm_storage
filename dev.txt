@@ -275,3 +275,93 @@
 3. 缓存分层 (从底层到上层)
    磁盘文件 → Buffer Pool (页面级) → Block Cache (块级, stub) → KV Cache (行级,OB独有)
    MiniOB 只有最底层是完整的,上层都是占位符。
+
+
+================================================================================
+八、去掉适配层 — SQL 层直接访问 storage（2025-06-28 下午）
+================================================================================
+【目标】删除 MiniOB 的教学适配层 (observer/storage/*)，SQL 层直接引用 storage/
+       头文件，对齐 OB 4.4.2 架构（OB 没有 DefaultHandler/Db/Table/Record 等中间件）。
+
+【删除的模块】(~140 文件, ~27000 行)
+  - observer/storage/ (整个目录, ~90 文件)
+    ├── default/      DefaultHandler — 存储入口 facade
+    ├── db/           Db — 数据库管理类
+    ├── table/        Table / TableEngine / TableMeta / HeapTableEngine / LsmTableEngine
+    ├── record/       Record / RID / RecordScanner / RecordManager / RecordLog
+    ├── index/        BplusTree / BplusTreeIndex / Index / IndexMeta
+    ├── trx/          TrxKit / Trx / MvccTrx / VacuousTrx
+    ├── field/        Field / FieldMeta
+    ├── clog/         DiskLogHandler / LogBuffer / LogEntry / LogFile
+    ├── buffer/       DiskBufferPool / DoubleWriteBuffer / BPFrameManager
+    ├── common/       ConditionFilter / MetaUtil / Chunk / Column / Codec
+    └── persist/      PersistHandler
+
+  - src/oblsm/ (整个目录, ~49 文件)
+    MiniOB 自带的 LevelDB 风格 LSM 引擎 (SkipList + SSTable + Manifest + WAL)
+
+【新建的模块】(~80 文件, ~15000 行)
+  所有文件从 mystorage/ 迁移到 storage/，目录对齐 OB 4.4.2:
+    storage/blocksstable/   — SSTable 层 (12 文件)
+    storage/memtable/       — MemTable + MVCC 引擎 (10 文件)
+    storage/memtable/mvcc/  — MVCC 行/事务节点/查询引擎 (8 文件)
+    storage/ls/             — Log Stream (4 文件)
+    storage/tablet/         — ObTablet + ObTabletTableStore (4 文件)
+    storage/compaction/     — Compaction 三级合并 (3 文件)
+    storage/logservice/     — CLOG 入口层 (6 文件)
+    storage/logservice/palf/ — PALF 日志框架 (22 文件)
+    storage/schema/         — SchemaService (5 文件)
+    storage/cache/          — KV Cache + Block Cache (2 文件)
+
+【修改的 SQL 层文件】(~40 文件)
+  核心改造:
+    init.cpp                  DefaultHandler::init() → ObSchemaService::instance() + init dir
+    global_context.h/cpp      删 BufferPoolManager/DefaultHandler 成员
+    session.h/cpp             删 Db 依赖, 改为 database_id + SchemaService
+    main.cpp                  默认引擎 ob, 删 heap/lsm 帮助文本
+
+  SQL 执行器 (DDL — 已完全工作):
+    create_database_executor.h   handler.create_db() → ObSchemaService::instance().create_database()
+    drop_database_executor.h     handler.drop_db() → ObSchemaService::instance().drop_database()
+    show_databases_executor.h    handler.list_dbs() → ObSchemaService::instance().get_all_databases()
+    show_tables_executor.h       db->all_tables() → ObSchemaService::instance().get_all_tables()
+    create_table_executor.cpp    db->create_table() → ObSchemaService::instance().create_table()
+    desc_table_executor.cpp      db->find_table() → ObSchemaService::instance().get_table_schema()
+
+  SQL 物理算子 (DML — stubbed, 待正确实现):
+    insert_physical_operator.*    Record/Table → void* stubs
+    table_scan_physical_operator.* RecordScanner/Table → void* stubs
+    delete_physical_operator.*    Record/Table → void* stubs
+    index_scan_physical_operator.* Index/BplusTree → void* stubs
+    ~20 个 operator/expr 文件     Chunk/Table/Record → 最小 stubs
+
+  表达式层:
+    expression.h/cpp         FieldExpr/Field/Tuple/Chunk → 简化版
+    tuple.h                  RowTuple: Record/Table → vector<Value> 简化
+    filter_stmt.h            Field → void* stub
+
+  基础设施:
+    common/type/column.h/cpp    Column 类重建 (pimpl 规避循环依赖)
+    net/plain_communicator.cpp  去掉 Chunk 输出模式
+    net/mysql_communicator.cpp  同上
+
+【架构对比】
+              改造前                                     改造后
+              ──────                                     ──────
+  SQL → DefaultHandler → Db → Table → TableEngine    SQL → ObSchemaService
+                  ↓                  ↓                      ↓
+           RecordManager        ObTableEngine          ObTablet / ObTableStore
+           DiskBufferPool       ObStore                 ObMemtable
+           BplusTreeIndex       ObTablet                ObSSTable
+           DiskLogHandler       ObMemtable              ObLogHandler (CLOG)
+
+  OB 4.4.2: SQL → ObSchemaService → ObLS → ObTablet → ObTableStore
+
+【编译状态】
+  ✅ storage/ 库: 100% 编译通过
+  ✅ observer DDL 链路: CREATE/DROP/SHOW DATABASE, CREATE/SHOW TABLE 可运行
+  ⚠️ observer DML 算子: INSERT/SCAN/DELETE 已 stub, 待后续正确实现
+
+【GitHub 推送】
+  https://github.com/duanhui8/lsm_storage
+  分支: main, 提交: 370 files, +15432/-27359 lines
