@@ -8,6 +8,7 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_operator.h */
 #include "share/schema/ob_database_schema.h"
 #include "share/schema/ob_table_schema.h"
 #include "share/schema/ob_database_sql_service.h"
+#include "share/schema/ob_ddl_sql_service.h"
 
 namespace oceanbase { namespace rootserver {
 class ObDDLOperator {
@@ -18,10 +19,14 @@ public:
   int drop_database(const char *db_name);
   int create_table(share::schema::ObTableSchema &table_schema, uint64_t &table_id);
 
-  /** Set the system tablet for direct __all_database writes */
-  void set_system_tablet(void *tablet) { db_sql_service_.set_system_tablet(tablet); }
+  /** Set the system tablet for direct __all_database + __all_ddl_operation writes */
+  void set_system_tablet(void *tablet) {
+    db_sql_service_.set_system_tablet(tablet);
+    ddl_sql_service_.set_system_tablet(tablet);
+  }
 
 private:
   share::schema::ObDatabaseSqlService db_sql_service_;
+  share::schema::ObDDLSqlService       ddl_sql_service_;
 };
 }}
