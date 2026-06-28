@@ -9,7 +9,6 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "sql/stmt/analyze_table_stmt.h"
-#include "storage/db/db.h"
 
 RC AnalyzeTableStmt::create(Db *db, const AnalyzeTableSqlNode &analyze_table, Stmt *&stmt)
 {

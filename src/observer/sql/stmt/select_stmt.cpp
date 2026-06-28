@@ -16,8 +16,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "sql/stmt/filter_stmt.h"
-#include "storage/db/db.h"
-#include "storage/table/table.h"
 #include "sql/parser/expression_binder.h"
 
 using namespace std;

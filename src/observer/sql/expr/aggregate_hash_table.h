@@ -1,12 +1,5 @@
-/* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
-miniob is licensed under Mulan PSL v2.
-You can use this software according to the terms and conditions of the Mulan PSL v2.
-You may obtain a copy of Mulan PSL v2 at:
-         http://license.coscl.org.cn/MulanPSL2
-THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-See the Mulan PSL v2 for more details. */
+/* Stub — Aggregate hash tables not yet reimplemented */
+#include "common/log/log.h"
 
 #pragma once
 
@@ -33,7 +26,7 @@ public:
     /**
      * 通过扫描哈希表，将哈希表中的聚合结果写入 chunk 中。
      */
-    virtual RC next(Chunk &chunk) = 0;
+    virtual RC next(void *chunk) = 0;
 
     virtual void close_scan() {}
 
@@ -44,7 +37,7 @@ public:
   /**
    * @brief 将 groups_chunk 和 aggrs_chunk 写入到哈希表中。哈希表中记录了聚合结果。
    */
-  virtual RC add_chunk(Chunk &groups_chunk, Chunk &aggrs_chunk) = 0;
+  virtual RC add_chunk(void *groups_chunk, void *aggrs_chunk) = 0;
 
   virtual ~AggregateHashTable() = default;
   vector<AggregateExpr::Type> aggr_types_;
@@ -74,7 +67,7 @@ public:
 
     void open_scan() override;
 
-    RC next(Chunk &chunk) override;
+    RC next(void *chunk) override;
 
   private:
     StandardHashTable::iterator end_;
@@ -98,7 +91,7 @@ public:
     }
   }
 
-  RC add_chunk(Chunk &groups_chunk, Chunk &aggrs_chunk) override;
+  RC add_chunk(void *groups_chunk, void *aggrs_chunk) override;
 
   StandardHashTable::iterator begin() { return aggr_values_.begin(); }
   StandardHashTable::iterator end() { return aggr_values_.end(); }
@@ -124,7 +117,7 @@ public:
 
     void open_scan() override;
 
-    RC next(Chunk &chunk) override;
+    RC next(void *chunk) override;
 
     void close_scan() override;
 
@@ -144,7 +137,7 @@ public:
 
   RC iter_get(int pos, int &key, V &value);
 
-  RC add_chunk(Chunk &group_chunk, Chunk &aggr_chunk) override;
+  RC add_chunk(void *group_chunk, void *aggr_chunk) override;
 
   int capacity() { return capacity_; }
   int size() { return size_; }

@@ -17,7 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/sys/rc.h"
 
 class SQLStageEvent;
-class Table;
+// class Table; (removed)
 class SqlResult;
 
 /**
@@ -30,8 +30,8 @@ public:
   LoadDataExecutor()          = default;
   virtual ~LoadDataExecutor() = default;
 
-  RC execute(SQLStageEvent *sql_event);
+  RC execute(SQLStageEvent *sql_event) { return RC::UNIMPLEMENTED; }
 
 private:
-  void load_data(Table *table, const char *file_name, char terminated, char enclosed, SqlResult *sql_result);
+  void load_data(void *, const char *, char, char, SqlResult *) {}
 };

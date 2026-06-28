@@ -19,9 +19,8 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/tuple_cell.h"
 #include "sql/parser/parse.h"
 #include "common/value.h"
-#include "storage/record/record.h"
 
-class Table;
+// class Table; (removed)
 
 /**
  * @defgroup Tuple
@@ -161,26 +160,21 @@ public:
   RowTuple() = default;
   virtual ~RowTuple()
   {
-    for (FieldExpr *spec : speces_) {
-      delete spec;
-    }
+    for (FieldExpr *spec : speces_) { delete spec; }
     speces_.clear();
   }
 
-  void set_record(Record *record) { this->record_ = record; }
+  void set_record(const std::vector<Value> &values) { values_ = values; }
 
-  void set_schema(const Table *table, const vector<FieldMeta> *fields)
+  void set_schema(const string &table_name, const vector<TupleCellSpec> &specs)
   {
-    table_ = table;
-    // fix:join当中会多次调用右表的open,open当中会调用set_scheme，从而导致tuple当中会存储
-    // 很多无意义的field和value，因此需要先clear掉
-    for (FieldExpr *spec : speces_) {
-      delete spec;
-    }
-    this->speces_.clear();
-    this->speces_.reserve(fields->size());
-    for (const FieldMeta &field : *fields) {
-      speces_.push_back(new FieldExpr(table, &field));
+    table_name_ = table_name;
+    for (FieldExpr *spec : speces_) { delete spec; }
+    speces_.clear();
+    for (size_t i = 0; i < specs.size(); i++) {
+      auto *fe = new FieldExpr(table_name, specs[i].field_name(), static_cast<int>(i),
+                               AttrType::UNDEFINED, 0);
+      speces_.push_back(fe);
     }
   }
 
@@ -188,63 +182,30 @@ public:
 
   RC cell_at(int index, Value &cell) const override
   {
-    if (index < 0 || index >= static_cast<int>(speces_.size())) {
-      LOG_WARN("invalid argument. index=%d", index);
-      return RC::INVALID_ARGUMENT;
-    }
-
-    FieldExpr       *field_expr = speces_[index];
-    const FieldMeta *field_meta = field_expr->field().meta();
-    cell.reset();
-    cell.set_type(field_meta->type());
-    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    if (index < 0 || index >= static_cast<int>(values_.size())) return RC::INVALID_ARGUMENT;
+    cell = values_[index];
     return RC::SUCCESS;
   }
 
   RC spec_at(int index, TupleCellSpec &spec) const override
   {
-    const Field &field = speces_[index]->field();
-    spec               = TupleCellSpec(table_->name(), field.field_name());
+    spec = TupleCellSpec(table_name_.c_str(), speces_[index]->field_name());
     return RC::SUCCESS;
   }
 
   RC find_cell(const TupleCellSpec &spec, Value &cell) const override
   {
-    const char *table_name = spec.table_name();
-    const char *field_name = spec.field_name();
-    if (0 != strcmp(table_name, table_->name())) {
-      return RC::NOTFOUND;
-    }
-
     for (size_t i = 0; i < speces_.size(); ++i) {
-      const FieldExpr *field_expr = speces_[i];
-      const Field     &field      = field_expr->field();
-      if (0 == strcmp(field_name, field.field_name())) {
+      if (0 == strcmp(spec.field_name(), speces_[i]->field_name())) {
         return cell_at(i, cell);
       }
     }
     return RC::NOTFOUND;
   }
 
-#if 0
-  RC cell_spec_at(int index, const TupleCellSpec *&spec) const override
-  {
-    if (index < 0 || index >= static_cast<int>(speces_.size())) {
-      LOG_WARN("invalid argument. index=%d", index);
-      return RC::INVALID_ARGUMENT;
-    }
-    spec = speces_[index];
-    return RC::SUCCESS;
-  }
-#endif
-
-  Record &record() { return *record_; }
-
-  const Record &record() const { return *record_; }
-
 private:
-  Record             *record_ = nullptr;
-  const Table        *table_  = nullptr;
+  string table_name_;
+  vector<Value> values_;
   vector<FieldExpr *> speces_;
 };
 

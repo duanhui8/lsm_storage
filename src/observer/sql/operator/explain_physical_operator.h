@@ -37,7 +37,7 @@ public:
 
   RC     open(Trx *trx) override;
   RC     next() override;
-  RC     next(Chunk &chunk) override;
+  RC     next(void *chunk) override;
   RC     close() override;
   Tuple *current_tuple() override;
 

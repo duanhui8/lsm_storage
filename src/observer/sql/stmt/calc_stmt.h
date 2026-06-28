@@ -19,7 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/stmt.h"
 
 class Db;
-class Table;
+// class Table; (removed)
 
 /**
  * @brief 描述算术运算语句

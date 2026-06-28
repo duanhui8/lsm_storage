@@ -14,7 +14,8 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "storage/field/field_meta.h"
+#include "common/lang/string.h"
+
 
 class TupleCellSpec final
 {

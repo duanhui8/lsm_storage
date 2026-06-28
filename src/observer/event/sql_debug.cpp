@@ -27,28 +27,7 @@ const list<string> &SqlDebug::get_debug_infos() const { return debug_infos_; }
 
 void sql_debug(const char *fmt, ...)
 {
-  Session *session = Session::current_session();
-  if (nullptr == session) {
-    return;
-  }
-
-  SessionEvent *request = session->current_request();
-  if (nullptr == request) {
-    return;
-  }
-
-  SqlDebug &sql_debug = request->sql_debug();
-
-  const int buffer_size = 4096;
-  char     *str         = new char[buffer_size];
-
-  va_list ap;
-  va_start(ap, fmt);
-  vsnprintf(str, buffer_size, fmt, ap);
-  va_end(ap);
-
-  sql_debug.add_debug_info(str);
-  LOG_DEBUG("sql debug info: [%s]", str);
-
-  delete[] str;
+  (void)fmt;
+  // Stub: Session::current_session removed with adapter layer
+  return;
 }

@@ -26,9 +26,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "session/session_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
-#include "storage/buffer/disk_buffer_pool.h"
-#include "storage/default/default_handler.h"
-#include "storage/trx/trx.h"
+#include "storage/schema/ob_schema_service.h"
 
 using namespace common;
 
@@ -60,7 +58,7 @@ int init_log(ProcessParam *process_cfg, Ini &properties)
       return 0;
     }
 
-    auto log_context_getter = []() { return reinterpret_cast<intptr_t>(Session::current_session()); };
+    auto log_context_getter = []() -> intptr_t { return 0; };
 
     const string        log_section_name = "LOG";
     map<string, string> log_section      = properties.get(log_section_name);
@@ -136,26 +134,20 @@ int prepare_init_seda()
 
 int init_global_objects(ProcessParam *process_param, Ini &properties)
 {
-  GCTX.handler_ = new DefaultHandler();
+  // Init schema service (sys database)
+  auto &schema = oceanbase::share::schema::ObSchemaService::instance();
+  uint64_t sys_id = 0;
+  schema.create_database("sys", sys_id);
 
-  int ret = 0;
+  // Set default session to sys
+  Session::default_session().set_current_db("sys");
 
-  RC rc = GCTX.handler_->init("miniob", 
-                              process_param->trx_kit_name().c_str(),
-                              process_param->durability_mode().c_str(),
-                              process_param->storage_engine().c_str());
-  if (OB_FAIL(rc)) {
-    LOG_ERROR("failed to init handler. rc=%s", strrc(rc));
-    return -1;
-  }
-  return ret;
+  LOG_INFO("Global objects initialized successfully");
+  return 0;
 }
 
 int uninit_global_objects()
 {
-  delete GCTX.handler_;
-  GCTX.handler_ = nullptr;
-
   return 0;
 }
 

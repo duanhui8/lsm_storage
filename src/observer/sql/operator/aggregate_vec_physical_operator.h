@@ -26,7 +26,7 @@ public:
   PhysicalOperatorType type() const override { return PhysicalOperatorType::AGGREGATE_VEC; }
 
   RC open(Trx *trx) override;
-  RC next(Chunk &chunk) override;
+  RC next(void *chunk) override;
   RC close() override;
 
 private:
@@ -61,8 +61,8 @@ private:
   };
   vector<Expression *> aggregate_expressions_;  /// 聚合表达式
   vector<Expression *> value_expressions_;
-  Chunk                chunk_;
-  Chunk                output_chunk_;
+  void *               chunk_;
+  void *               output_chunk_;
   AggregateValues      aggr_values_;
   bool                 outputed_ = false;
 };

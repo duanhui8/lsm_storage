@@ -14,7 +14,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/math/simd_util.h"
 #endif
 
-#include "storage/common/column.h"
+#include "common/type/column.h"
 
 struct Equal
 {

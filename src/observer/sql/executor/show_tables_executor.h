@@ -1,57 +1,38 @@
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
-miniob is licensed under Mulan PSL v2.
-You can use this software according to the terms and conditions of the Mulan PSL v2.
-You may obtain a copy of Mulan PSL v2 at:
-         http://license.coscl.org.cn/MulanPSL2
-THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-See the Mulan PSL v2 for more details. */
-
-//
-// Created by Wangyunlai on 2023/6/14.
-//
+miniob is licensed under Mulan PSL v2. */
 
 #pragma once
 
 #include "common/sys/rc.h"
+#include "sql/executor/sql_result.h"
+#include "sql/operator/string_list_physical_operator.h"
+#include "storage/schema/ob_schema_service.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "session/session.h"
-#include "sql/executor/sql_result.h"
-#include "sql/operator/string_list_physical_operator.h"
-#include "storage/db/db.h"
 
-/**
- * @brief 显示所有表的执行器
- * @ingroup Executor
- * @note 与CreateIndex类似，不处理并发
- */
 class ShowTablesExecutor
 {
 public:
-  ShowTablesExecutor()          = default;
+  ShowTablesExecutor() = default;
   virtual ~ShowTablesExecutor() = default;
 
   RC execute(SQLStageEvent *sql_event)
   {
-    SqlResult    *sql_result    = sql_event->session_event()->sql_result();
-    SessionEvent *session_event = sql_event->session_event();
+    SqlResult *sql_result = sql_event->session_event()->sql_result();
+    Session *session = sql_event->session_event()->session();
 
-    Db *db = session_event->session()->get_current_db();
-
-    vector<string> all_tables;
-    db->all_tables(all_tables);
+    vector<string> table_names;
+    oceanbase::share::schema::ObSchemaService::instance().get_all_tables(
+        session->get_current_database_id(), table_names);
 
     TupleSchema tuple_schema;
-    tuple_schema.append_cell(TupleCellSpec("", "Tables_in_SYS", "Tables_in_SYS"));
+    std::string header = std::string("Tables_in_") + std::string(session->get_current_db_name());
+    tuple_schema.append_cell(TupleCellSpec("", header.c_str(), header.c_str()));
     sql_result->set_tuple_schema(tuple_schema);
 
     auto oper = new StringListPhysicalOperator;
-    for (const string &s : all_tables) {
-      oper->append(s);
-    }
-
+    for (const string &s : table_names) oper->append(s);
     sql_result->set_operator(unique_ptr<PhysicalOperator>(oper));
     return RC::SUCCESS;
   }

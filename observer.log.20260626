@@ -1,0 +1,152 @@
+[2026-06-26 05:19:15.682716 pid:22778 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 05:19:15.683144 pid:22778 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 05:19:15.683482 pid:22778 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:90] >> OB store init with miniob/db/sys success
+[2026-06-26 05:19:15.683606 pid:22778 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-26 05:19:15.683635 pid:22778 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-26 05:19:37.118968 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:19:52.280077 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:20:31.907565 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: create@table.cpp:108] >> Begin to create table miniob/db/sys:t1
+[2026-06-26 05:20:31.907681 pid:22778 tid:7ffff706d7c0 ctx:504000000090 ERROR: create@table.cpp:122] >> Failed to create table file, it has been created. miniob/db/sys/t1.table, EEXIST, File exists
+[2026-06-26 05:20:31.907745 pid:22778 tid:7ffff706d7c0 ctx:504000000090 ERROR: create_table@db.cpp:193] >> Failed to create table t1.
+[2026-06-26 05:20:33.878501 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:20:44.546474 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:20:57.572427 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: create_stmt@stmt.cpp:228] >> Command::type 7 doesn't need to create statement.
+[2026-06-26 05:20:57.685667 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:21:09.315709 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: create@table.cpp:108] >> Begin to create table miniob/db/sys:t2
+[2026-06-26 05:21:09.315987 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 05:21:09.316025 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 05:21:09.316057 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: init@table_meta.cpp:103] >> Sussessfully initialized table meta. table id=1, name=t2
+[2026-06-26 05:21:09.316807 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: create@table.cpp:181] >> Successfully create table miniob/db/sys:t2
+[2026-06-26 05:21:09.316853 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: create_table@db.cpp:199] >> Create table success. table name=t2, table_id:1
+[2026-06-26 05:21:09.316905 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: sync@db.cpp:281] >> Successfully sync table db:sys, table:t2.
+[2026-06-26 05:21:09.317195 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: flush_meta@db.cpp:420] >> Successfully write db meta file. db=sys, file=miniob/db/sys/sys.db.tmp, check_point_lsn=0
+[2026-06-26 05:21:09.317232 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: sync@db.cpp:306] >> Successfully sync db. db=sys
+[2026-06-26 05:21:09.317249 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-26 05:21:09.425660 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:21:20.620814 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:21:28.220768 pid:22778 tid:7ffff706d7c0 ctx:504000000090 WARN: open_scan@ob_record_scanner.cpp:27] >> ob record scanner: scan returned 0 rows, ret=0
+[2026-06-26 05:21:28.220987 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:21:49.632610 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:21:57.124493 pid:22778 tid:7ffff706d7c0 ctx:504000000090 WARN: open_scan@ob_record_scanner.cpp:27] >> ob record scanner: scan returned 1 rows, ret=0
+[2026-06-26 05:21:57.124781 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:22:08.741219 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:22:13.536482 pid:22778 tid:7ffff706d7c0 ctx:504000000090 WARN: open_scan@ob_record_scanner.cpp:27] >> ob record scanner: scan returned 2 rows, ret=0
+[2026-06-26 05:22:13.536649 pid:22778 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 05:22:29.198964 pid:22778 tid:7ffff706d7c0 ctx:504000000090 WARN: open_scan@ob_record_scanner.cpp:27] >> ob record scanner: scan returned 2 rows, ret=0
+[2026-06-26 05:22:31.959964 pid:25705 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 05:22:31.960124 pid:25705 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 05:22:31.960204 pid:25705 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:90] >> OB store init with miniob/db/sys success
+[2026-06-26 05:22:31.960247 pid:25705 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-26 05:22:31.960268 pid:25705 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-26 05:36:38.160188 pid:37536 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 05:36:38.160359 pid:37536 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 05:36:38.160471 pid:37536 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:90] >> OB store init with miniob/db/sys success
+[2026-06-26 05:36:38.160511 pid:37536 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-26 05:36:38.160531 pid:37536 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-26 16:24:57.397533 pid:96806 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:24:57.398580 pid:96806 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:24:57.399327 pid:96806 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:90] >> OB store init with miniob/db/sys success
+[2026-06-26 16:24:57.399679 pid:96806 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-26 16:24:57.399737 pid:96806 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-26 16:25:15.833944 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: create@select_stmt.cpp:55] >> no such table. db=sys, table_name=t2
+[2026-06-26 16:25:15.834067 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: handle_request@resolve_stage.cpp:111] >> failed to create stmt. rc=26:SCHEMA_TABLE_NOT_EXIST
+[2026-06-26 16:25:22.459767 pid:96806 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 16:26:07.295494 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: create@select_stmt.cpp:55] >> no such table. db=sys, table_name=t2
+[2026-06-26 16:26:07.295590 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: handle_request@resolve_stage.cpp:111] >> failed to create stmt. rc=26:SCHEMA_TABLE_NOT_EXIST
+[2026-06-26 16:26:11.735094 pid:96806 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 16:27:25.189551 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: create@select_stmt.cpp:55] >> no such table. db=sys, table_name=t2
+[2026-06-26 16:27:33.905806 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: handle_request@resolve_stage.cpp:111] >> failed to create stmt. rc=26:SCHEMA_TABLE_NOT_EXIST
+[2026-06-26 16:27:42.062630 pid:96806 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 16:27:47.419861 pid:96806 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 16:30:09.335882 pid:96806 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 16:32:08.488304 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: create@select_stmt.cpp:55] >> no such table. db=sys, table_name=t2
+[2026-06-26 16:32:08.488577 pid:96806 tid:7ffff706d7c0 ctx:504000000090 WARN: handle_request@resolve_stage.cpp:111] >> failed to create stmt. rc=26:SCHEMA_TABLE_NOT_EXIST
+[2026-06-26 16:32:12.548112 pid:96806 tid:7ffff706d7c0 ctx:504000000090 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-26 16:33:05.796082 pid:3418 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:33:05.796866 pid:3418 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:33:05.798798 pid:3418 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:33:05.798852 pid:3418 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:33:19.341441 pid:3654 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:33:19.341625 pid:3654 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:33:19.342276 pid:3654 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:33:19.342319 pid:3654 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:33:26.383877 pid:3811 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:33:26.384029 pid:3811 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:33:26.384615 pid:3811 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:33:26.384659 pid:3811 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:39:33.373446 pid:7987 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:39:33.373721 pid:7987 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:50:09.048095 pid:7987 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:50:09.048328 pid:7987 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:53:52.648449 pid:16982 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:53:52.648818 pid:16982 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:53:53.977542 pid:16982 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:53:53.977619 pid:16982 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:53:53.977681 pid:16982 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-26 16:53:53.977722 pid:16982 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:246] >> Skipping table t1.table (different engine type)
+[2026-06-26 16:53:53.978216 pid:16982 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:53:53.978266 pid:16982 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:54:07.646948 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-26 16:54:07.647113 pid:17245 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-26 16:54:52.999176 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:54:52.999395 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 16:54:52.999462 pid:17245 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-26 16:55:06.965599 pid:17245 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:246] >> Skipping table t1.table (different engine type)
+[2026-06-26 16:55:11.135181 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-26 16:55:11.135290 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-26 17:00:29.774205 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:265] >> Open table: t2, file: t2.table
+[2026-06-26 17:00:31.342352 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=1
+[2026-06-26 17:00:35.479377 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:96] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-26 17:01:09.221910 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-26 17:01:15.762316 pid:17245 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-26 17:02:00.631575 pid:17245 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

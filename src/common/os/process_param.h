@@ -110,7 +110,7 @@ private:
   string         unix_socket_path_;
   string         protocol_;
   string         trx_kit_name_;
-  string         storage_engine_;
+  string         storage_engine_ = "ob";  // Default: OceanBase 4.4.2 style mystorage engine
   string         thread_handling_name_;
   int            buffer_pool_memory_size_ = -1;
   string         durability_mode_;

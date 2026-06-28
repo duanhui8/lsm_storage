@@ -1,0 +1,202 @@
+[2026-06-28 05:08:40.190428 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 05:08:40.191811 pid:61641 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-28 05:08:43.291284 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 05:08:43.291364 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 05:08:43.291427 pid:61641 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-28 05:08:43.291468 pid:61641 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:246] >> Skipping table t1.table (different engine type)
+[2026-06-28 05:08:43.291773 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 05:08:43.291829 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 05:08:44.839707 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:265] >> Open table: t2, file: t2.table
+[2026-06-28 05:08:44.839790 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=1
+[2026-06-28 05:08:44.839810 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:96] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-28 05:08:44.839844 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 05:08:44.839879 pid:61641 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 05:09:08.205361 pid:61641 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 05:12:07.867147 pid:61641 tid:7ffff706d7c0 ctx:504000000410 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=0
+[2026-06-28 05:12:07.867695 pid:61641 tid:7ffff706d7c0 ctx:504000000410 INFO: init@db.cpp:96] >> OB store init with miniob/db/test success, 0 tables opened
+[2026-06-28 05:12:08.767233 pid:61641 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 05:12:27.264533 pid:61641 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:19:21.066561 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 06:19:21.067411 pid:1383 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-28 06:19:26.549524 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:19:26.549619 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:19:26.549750 pid:1383 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-28 06:19:26.549843 pid:1383 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:246] >> Skipping table t1.table (different engine type)
+[2026-06-28 06:19:26.550382 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:19:26.550436 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:19:28.435532 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:265] >> Open table: t2, file: t2.table
+[2026-06-28 06:19:28.435629 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=1
+[2026-06-28 06:19:28.435659 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:96] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-28 06:19:28.435846 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 06:19:28.435916 pid:1383 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 06:20:47.388302 pid:1383 tid:7ffff706d7c0 ctx:504000000410 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=0
+[2026-06-28 06:20:47.388742 pid:1383 tid:7ffff706d7c0 ctx:504000000410 INFO: init@db.cpp:96] >> OB store init with miniob/db/test success, 0 tables opened
+[2026-06-28 06:20:47.404262 pid:1383 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:20:53.071425 pid:1383 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:21:59.313066 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 06:21:59.313397 pid:4653 tid:76bbdd5c97c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-28 06:21:59.315577 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.317074 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.318374 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.318726 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.319907 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.321367 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.322987 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.324350 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.325787 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.327064 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.328303 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.329491 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.330829 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.332198 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.333757 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.334829 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.335398 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.336872 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.338288 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.339858 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.339894 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2026-06-28 06:21:59.339902 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:990] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2026-06-28 06:21:59.339996 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:447] >> double write buffer load pages done. page num=0
+[2026-06-28 06:21:59.340869 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2026-06-28 06:21:59.342651 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:21:59.342700 pid:4653 tid:76bbdd5c97c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:22:34.538315 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 06:22:34.538543 pid:5058 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-28 06:22:35.294252 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:22:35.294329 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:22:35.294391 pid:5058 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-28 06:22:35.294448 pid:5058 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:246] >> Skipping table t1.table (different engine type)
+[2026-06-28 06:22:35.294781 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:22:35.294821 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:22:36.805046 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:265] >> Open table: t2, file: t2.table
+[2026-06-28 06:22:36.805177 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=1
+[2026-06-28 06:22:36.805224 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:96] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-28 06:22:36.805310 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 06:22:36.805355 pid:5058 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 06:22:43.105654 pid:5058 tid:7ffff706d7c0 ctx:504000000410 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=0
+[2026-06-28 06:22:43.105757 pid:5058 tid:7ffff706d7c0 ctx:504000000410 INFO: init@db.cpp:96] >> OB store init with miniob/db/test success, 0 tables opened
+[2026-06-28 06:22:43.122857 pid:5058 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:22:46.330749 pid:5058 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:22:48.667471 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 06:22:48.667648 pid:5354 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-28 06:22:57.672820 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:22:57.672907 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:22:57.672959 pid:5354 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-28 06:22:57.672983 pid:5354 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:246] >> Skipping table t1.table (different engine type)
+[2026-06-28 06:22:57.673029 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:22:57.673061 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:22:59.279017 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:265] >> Open table: t2, file: t2.table
+[2026-06-28 06:22:59.279117 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=1
+[2026-06-28 06:22:59.279137 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:96] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-28 06:22:59.279165 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 06:22:59.279193 pid:5354 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 06:23:19.835406 pid:5354 tid:7ffff706d7c0 ctx:504000000410 INFO: open_all_tables@db.cpp:268] >> All table have been opened. num=0
+[2026-06-28 06:23:19.835489 pid:5354 tid:7ffff706d7c0 ctx:504000000410 INFO: init@db.cpp:96] >> OB store init with miniob/db/test success, 0 tables opened
+[2026-06-28 06:23:20.677732 pid:5354 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:23:25.738719 pid:5354 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:37:32.527580 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 06:37:32.528179 pid:15289 tid:7ffff706d7c0 ctx:0 WARN: create_db@default_handler.cpp:141] >> Db already exists: sys
+[2026-06-28 06:37:33.829687 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:37:33.829762 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:37:33.829829 pid:15289 tid:7ffff706d7c0 ctx:0 WARN: open@table.cpp:218] >> Skip table t1: OB engine can't open HEAP/LSM table
+[2026-06-28 06:37:33.829866 pid:15289 tid:7ffff706d7c0 ctx:0 WARN: open_all_tables@db.cpp:257] >> Skipping table t1.table (different engine type)
+[2026-06-28 06:37:33.830148 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:37:33.830196 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:37:35.200216 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:276] >> Open table: t2, file: t2.table
+[2026-06-28 06:37:35.200309 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: open_all_tables@db.cpp:279] >> All table have been opened. num=1
+[2026-06-28 06:37:35.200329 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@db.cpp:96] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-28 06:37:35.200359 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@default_handler.cpp:109] >> Default handler init with miniob success
+[2026-06-28 06:37:35.200381 pid:15289 tid:7ffff706d7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 06:37:44.035336 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:37:51.931684 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: open_all_tables@db.cpp:279] >> All table have been opened. num=0
+[2026-06-28 06:37:51.931766 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: init@db.cpp:96] >> OB store init with miniob/db/test success, 0 tables opened
+[2026-06-28 06:37:52.029173 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:37:56.932123 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:38:22.004402 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:38:42.624427 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:40:02.683437 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 06:40:36.909267 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: create@table.cpp:108] >> Begin to create table miniob/db/test:t1
+[2026-06-28 06:40:36.909409 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 06:40:36.909444 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 06:40:36.909461 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: init@table_meta.cpp:103] >> Sussessfully initialized table meta. table id=0, name=t1
+[2026-06-28 06:40:37.200020 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: create@table.cpp:181] >> Successfully create table miniob/db/test:t1
+[2026-06-28 06:40:37.200155 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: create_table@db.cpp:216] >> Create table success. table name=t1, table_id:0
+[2026-06-28 06:40:37.200191 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: sync@db.cpp:303] >> Successfully sync table db:test, table:t1.
+[2026-06-28 06:40:37.200396 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: flush_meta@db.cpp:442] >> Successfully write db meta file. db=test, file=miniob/db/test/test.db.tmp, check_point_lsn=0
+[2026-06-28 06:40:37.200448 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: sync@db.cpp:328] >> Successfully sync db. db=test
+[2026-06-28 06:40:37.200458 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 06:40:37.308748 pid:15289 tid:7ffff706d7c0 ctx:504000000410 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 07:08:35.095169 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@init.cpp:200] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 07:08:35.095557 pid:42307 tid:70dcd9c117c0 ctx:0 WARN: create_db@default_handler.cpp:140] >> Db already exists: sys
+[2026-06-28 07:08:35.096534 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 07:08:35.096582 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 07:08:35.096634 pid:42307 tid:70dcd9c117c0 ctx:0 WARN: open@table.cpp:182] >> Skip table t1: only OB engine supported
+[2026-06-28 07:08:35.096677 pid:42307 tid:70dcd9c117c0 ctx:0 WARN: open_all_tables@db.cpp:150] >> Skipping table t1.table (different engine type)
+[2026-06-28 07:08:35.096979 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 07:08:35.097021 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 07:08:35.097091 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: open_all_tables@db.cpp:169] >> Open table: t2, file: t2.table
+[2026-06-28 07:08:35.097123 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: open_all_tables@db.cpp:172] >> All table have been opened. num=1
+[2026-06-28 07:08:35.097133 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@db.cpp:83] >> OB store init with miniob/db/sys success, 1 tables opened
+[2026-06-28 07:08:35.097148 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@default_handler.cpp:108] >> Default handler init with miniob success
+[2026-06-28 07:08:35.097154 pid:42307 tid:70dcd9c117c0 ctx:0 INFO: init@init.cpp:215] >> Successfully init utility
+[2026-06-28 07:47:55.582332 pid:64464 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:200] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 07:47:56.878935 pid:64464 tid:7ffff702c7c0 ctx:0 INFO: open_all_tables@db.cpp:172] >> All table have been opened. num=0
+[2026-06-28 07:47:56.879035 pid:64464 tid:7ffff702c7c0 ctx:0 INFO: init@db.cpp:83] >> OB store init with miniob/db/sys success, 0 tables opened
+[2026-06-28 07:47:56.879076 pid:64464 tid:7ffff702c7c0 ctx:0 INFO: init@default_handler.cpp:108] >> Default handler init with miniob success
+[2026-06-28 07:47:56.879101 pid:64464 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:215] >> Successfully init utility
+[2026-06-28 07:48:11.735663 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: create@table.cpp:95] >> Begin to create table miniob/db/sys:t1
+[2026-06-28 07:48:11.735792 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: init@field_meta.cpp:57] >> Init a field with name=id
+[2026-06-28 07:48:11.735811 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: init@field_meta.cpp:57] >> Init a field with name=name
+[2026-06-28 07:48:11.735826 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: init@table_meta.cpp:103] >> Sussessfully initialized table meta. table id=0, name=t1
+[2026-06-28 07:49:14.151153 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: create@table.cpp:147] >> Successfully create table miniob/db/sys:t1
+[2026-06-28 07:49:20.710368 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: create_table@db.cpp:109] >> Create table success. table name=t1, table_id:0
+[2026-06-28 07:49:20.710520 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:195] >> Successfully sync table db:sys, table:t1.
+[2026-06-28 07:49:20.710553 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
+[2026-06-28 07:49:20.710563 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 07:49:41.728103 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 07:49:58.613035 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 07:50:41.990768 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:195] >> Successfully sync table db:sys, table:t1.
+[2026-06-28 07:50:41.991189 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: sync@db.cpp:197] >> Successfully sync db. db=sys
+[2026-06-28 07:50:41.991218 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: execute@command_executor.cpp:177] >> sync db after ddl. rc=0
+[2026-06-28 07:50:41.996911 pid:64464 tid:7ffff702c7c0 ctx:504000000110 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

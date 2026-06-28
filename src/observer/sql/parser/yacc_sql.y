@@ -75,6 +75,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         SELECT
         DESC
         SHOW
+        DATABASE
+        DATABASES
+        USE
         SYNC
         INSERT
         DELETE
@@ -201,6 +204,10 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <sql_node>            set_variable_stmt
 %type <sql_node>            help_stmt
 %type <sql_node>            exit_stmt
+%type <sql_node>            create_database_stmt
+%type <sql_node>            drop_database_stmt
+%type <sql_node>            show_databases_stmt
+%type <sql_node>            use_database_stmt
 %type <sql_node>            command_wrapper
 // commands should be a list but I use a single command instead
 %type <sql_node>            commands
@@ -239,6 +246,10 @@ command_wrapper:
   | set_variable_stmt
   | help_stmt
   | exit_stmt
+  | create_database_stmt
+  | drop_database_stmt
+  | show_databases_stmt
+  | use_database_stmt
     ;
 
 exit_stmt:      
@@ -292,6 +303,33 @@ analyze_table_stmt:  /* analyze table 语法的语法解析树*/
 show_tables_stmt:
     SHOW TABLES {
       $$ = new ParsedSqlNode(SCF_SHOW_TABLES);
+    }
+    ;
+
+show_databases_stmt:
+    SHOW DATABASES {
+      $$ = new ParsedSqlNode(SCF_SHOW_DATABASES);
+    }
+    ;
+
+create_database_stmt:
+    CREATE DATABASE ID {
+      $$ = new ParsedSqlNode(SCF_CREATE_DATABASE);
+      $$->create_database.db_name = $3;
+    }
+    ;
+
+drop_database_stmt:
+    DROP DATABASE ID {
+      $$ = new ParsedSqlNode(SCF_DROP_DATABASE);
+      $$->drop_database.db_name = $3;
+    }
+    ;
+
+use_database_stmt:
+    USE ID {
+      $$ = new ParsedSqlNode(SCF_USE_DATABASE);
+      $$->use_database.db_name = $2;
     }
     ;
 

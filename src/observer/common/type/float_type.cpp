@@ -14,8 +14,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/float_type.h"
 #include "common/value.h"
 #include "common/lang/limits.h"
-#include "common/value.h"
-#include "storage/common/column.h"
+#include "common/type/column.h"
 
 int FloatType::compare(const Value &left, const Value &right) const
 {

@@ -1,16 +1,44 @@
-/* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
-miniob is licensed under Mulan PSL v2.
-You can use this software according to the terms and conditions of the Mulan PSL v2.
-You may obtain a copy of Mulan PSL v2 at:
-         http://license.coscl.org.cn/MulanPSL2
-THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-See the Mulan PSL v2 for more details. */
-
 //
 // Created by Longda on 2021
 //
+
+/**
+ * ==========================================================================
+ * 【架构概览】Server — 网络服务器层（两个实现）
+ * ==========================================================================
+ *
+ * 这个文件实现了两种服务器模式，通过继承 Server 基类来实现：
+ *
+ * ┌──────────────────────────────────────────────────────────────────┐
+ * │                    Server (抽象基类)                             │
+ * │                    serve() / shutdown()                          │
+ * ├──────────────────┬───────────────────────────────────────────────┤
+ * │   NetServer      │   CliServer                                   │
+ * │   TCP/Unix Socket│   标准输入输出（调试模式）                     │
+ * │   多线程处理      │   单线程处理                                  │
+ * └──────────────────┴───────────────────────────────────────────────┘
+ *
+ * ★ NetServer 的处理模型：
+ *   1. bind + listen 端口
+ *   2. poll() 等待新连接
+ *   3. accept() 接受连接 → 创建 Communicator → 交给 ThreadHandler
+ *   4. ThreadHandler 在线程池中运行 SqlTaskHandler 处理请求
+ *
+ * ★ CliServer 的处理模型（F5 调试时用这个）：
+ *   1. 从 stdin 读 SQL
+ *   2. 直接用 SqlTaskHandler 处理
+ *   3. 结果写到 stdout
+ *   4. 没有网络、没有多线程，调试清晰
+ *
+ * ★ 设计亮点：为什么 CliServer 不用 ThreadHandler？
+ *   调试时如果有多线程，GDB 默认只跟踪当前线程（其他线程还在跑），
+ *   单线程模式 -P cli 让断点行为完全可控。
+ *
+ * 💡 提问：NetServer::serve() 用 poll 而不是 select/epoll，为什么？
+ *   （提示：考虑连接数。数据库通常有多少并发连接？
+ *          poll vs epoll 在什么场景下性能差异最明显？）
+ * ==========================================================================
+ */
 
 #include "net/server.h"
 
@@ -44,10 +72,12 @@ using namespace common;
 
 ServerParam::ServerParam()
 {
-  listen_addr        = INADDR_ANY;
+  listen_addr        = INADDR_ANY;               // 默认监听所有网卡
   max_connection_num = MAX_CONNECTION_NUM_DEFAULT;
   port               = PORT_DEFAULT;
 }
+
+// ===================== NetServer（TCP 网络模式） ==========================
 
 NetServer::NetServer(const ServerParam &input_server_param) : Server(input_server_param) {}
 
@@ -74,6 +104,28 @@ int NetServer::set_non_block(int fd)
   return 0;
 }
 
+/**
+ * ★ 接受新连接
+ *
+ * 这是 poll 事件循环的回调：当监听 socket 有新的连接请求时调用。
+ * 流程：
+ *   1. accept() — 接受 TCP 连接
+ *   2. set_non_block() — 设为非阻塞（线程池模型要求）
+ *   3. TCP_NODELAY — 禁用 Nagle 算法（减少延迟）
+ *   4. CommunicatorFactory::create() — 根据协议类型创建通信对象
+ *   5. thread_handler_->new_connection() — 交给线程池处理
+ *
+ * ★ 为什么设非阻塞？
+ *   一个线程可能处理多个连接。如果用阻塞 I/O，一个慢客户端会拖住
+ *   整个线程。非阻塞 + 读写时可以立即返回，线程能切换到其他连接。
+ *
+ * ★ 为什么设 TCP_NODELAY？
+ *   Nagle 算法会攒小包延迟发送，降低网络利用率但增加延迟。
+ *   数据库场景对延迟敏感，禁用它。
+ *
+ * 💡 提问：new_connection 如果线程池满了怎么办？
+ *    看 ThreadHandler 的实现是怎么处理拒绝的。
+ */
 void NetServer::accept(int fd)
 {
   struct sockaddr_in addr;
@@ -105,7 +157,6 @@ void NetServer::accept(int fd)
   }
 
   if (!server_param_.use_unix_socket) {
-    // unix socket不支持设置NODELAY
     int yes = 1;
     ret     = setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
     if (ret < 0) {
@@ -115,6 +166,7 @@ void NetServer::accept(int fd)
     }
   }
 
+  // ★ 根据协议类型创建 Communicator（策略模式）
   Communicator *communicator = communicator_factory_.create(server_param_.protocol);
 
   RC rc = communicator->init(client_fd, make_unique<Session>(Session::default_session()), addr_str);
@@ -126,6 +178,7 @@ void NetServer::accept(int fd)
 
   LOG_INFO("Accepted connection from %s\n", communicator->addr());
 
+  // ★ 交给线程池处理
   rc = thread_handler_->new_connection(communicator);
   if (OB_FAIL(rc)) {
     LOG_WARN("failed to handle new connection. rc=%s", strrc(rc));
@@ -198,6 +251,8 @@ int NetServer::start_tcp_server()
 
 int NetServer::start_unix_socket_server()
 {
+  // ... Unix socket 类似 TCP，只是 bind 的是文件路径而不是 IP:端口
+  // 省略详细注释，与 TCP 版本类比理解即可
   int ret        = 0;
   server_socket_ = socket(PF_UNIX, SOCK_STREAM, 0);
   if (server_socket_ < 0) {
@@ -212,7 +267,7 @@ int NetServer::start_unix_socket_server()
     return -1;
   }
 
-  unlink(server_param_.unix_socket_path.c_str());  /// 如果不删除源文件，可能会导致bind失败
+  unlink(server_param_.unix_socket_path.c_str());
 
   struct sockaddr_un sockaddr;
   memset(&sockaddr, 0, sizeof(sockaddr));
@@ -239,6 +294,20 @@ int NetServer::start_unix_socket_server()
   return 0;
 }
 
+/**
+ * ★ NetServer::serve() — 网络服务器主循环
+ *
+ * 执行流程：
+ *   1. 创建 ThreadHandler（one-thread-per-connection 或 java-thread-pool）
+ *   2. 启动服务器 socket（bind + listen）
+ *   3. ★ 进入 poll 事件循环：
+ *      - poll 等待新连接（timeout 500ms）
+ *      - 有连接 → accept → 创建 Communicator → 交给线程池
+ *   4. 收到 shutdown 信号 → 停止线程池
+ *
+ * 💡 提问：poll timeout 为什么是 500ms 而不是 0（立即返回）或 -1（无限等待）？
+ *   （提示：started_ 在什么时候被设为 false？如果 poll 无限等待，shutdown 怎么生效？）
+ */
 int NetServer::serve()
 {
   thread_handler_ = ThreadHandler::create(server_param_.thread_handling.c_str());
@@ -259,19 +328,20 @@ int NetServer::serve()
     exit(-1);
   }
 
+  // ★ TCP 网络模式的事件循环
   if (!server_param_.use_std_io) {
     struct pollfd poll_fd;
     poll_fd.fd      = server_socket_;
-    poll_fd.events  = POLLIN;
+    poll_fd.events  = POLLIN;     // 监听"有数据可读"事件（即新连接到达）
     poll_fd.revents = 0;
 
     while (started_) {
-      int ret = poll(&poll_fd, 1, 500);
+      int ret = poll(&poll_fd, 1, 500);  // 500ms 超时
       if (ret < 0) {
         LOG_WARN("[listen socket] poll error. fd = %d, ret = %d, error=%s", poll_fd.fd, ret, strerror(errno));
         break;
       } else if (0 == ret) {
-        // LOG_TRACE("poll timeout. fd = %d", poll_fd.fd);
+        // 超时，没有新连接，继续循环（检查 started_ 标志）
         continue;
       }
 
@@ -280,12 +350,12 @@ int NetServer::serve()
         break;
       }
 
-      this->accept(server_socket_);
+      this->accept(server_socket_);  // ★ 接受新连接
     }
   }
 
   thread_handler_->stop();
-  thread_handler_->await_stop();
+  thread_handler_->await_stop();  // 等待所有工作线程退出
   delete thread_handler_;
   thread_handler_ = nullptr;
 
@@ -297,12 +367,10 @@ int NetServer::serve()
 void NetServer::shutdown()
 {
   LOG_INFO("NetServer shutting down");
-
-  // cleanup
-  started_ = false;
+  started_ = false;  // 设置标志，poll 循环检测到后退出
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// ===================== CliServer（CLI 交互模式） ==========================
 
 CliServer::CliServer(const ServerParam &input_server_param) : Server(input_server_param) {}
 
@@ -313,6 +381,25 @@ CliServer::~CliServer()
   }
 }
 
+/**
+ * ★ CliServer::serve() — CLI 模式主循环
+ *
+ * 这是最简单、最直观的执行路径。没有网络、没有多线程：
+ *
+ *   while (true) {
+ *     read_line(stdin);               // 从终端读一行
+ *     task_handler.handle_event();    // 解析+优化+执行
+ *     write_result(stdout);           // 结果打印到终端
+ *   }
+ *
+ * ★ 为什么 CLI 模式不用 ThreadHandler？
+ *   - 只有一个"客户端"（终端），不需要并发
+ *   - 调试友好：单线程意味着 GDB 断点行为完全可预期
+ *   - 代码简单：学习 MiniOB 的最佳入口
+ *
+ * 💡 提问：CliServer 和 NetServer 都实现了 serve()，为什么放在同一个文件？
+ *   （提示：虽然功能不同，但它们共享了什么？什么把它们关联在一起？）
+ */
 int CliServer::serve()
 {
   CliCommunicator communicator;
@@ -327,7 +414,7 @@ int CliServer::serve()
 
   SqlTaskHandler task_handler;
   while (started_ && !communicator.exit()) {
-    rc = task_handler.handle_event(&communicator);
+    rc = task_handler.handle_event(&communicator);  // ★ 一次请求的完整处理
     if (OB_FAIL(rc)) {
       started_ = false;
     }
@@ -340,7 +427,5 @@ int CliServer::serve()
 void CliServer::shutdown()
 {
   LOG_INFO("CliServer shutting down");
-
-  // cleanup
   started_ = false;
 }

@@ -17,7 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse_defs.h"
 #include "sql/stmt/stmt.h"
 
-class Table;
+// class Table; (removed)
 class FilterStmt;
 
 /**

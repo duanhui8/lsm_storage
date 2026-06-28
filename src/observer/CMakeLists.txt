@@ -32,7 +32,7 @@ SET(LIBEVENT_STATIC_LINK TRUE)
 FIND_PACKAGE(Libevent CONFIG REQUIRED)
 FIND_PACKAGE(jsoncpp CONFIG REQUIRED)
 
-SET(LIBRARIES common pthread dl libevent::core libevent::pthreads)
+SET(LIBRARIES common pthread dl jsoncpp_lib libevent::core libevent::pthreads)
 
 # 指定目标文件位置
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -46,7 +46,7 @@ TARGET_LINK_LIBRARIES(observer observer_static)
 ADD_LIBRARY(observer_static STATIC ${LIB_SRC})
 
 SET_TARGET_PROPERTIES(observer_static PROPERTIES OUTPUT_NAME observer)
-TARGET_LINK_LIBRARIES(observer_static ${LIBRARIES} oblsm)
+TARGET_LINK_LIBRARIES(observer_static ${LIBRARIES} storage)
 
 # Target 必须在定义 ADD_EXECUTABLE 之后， programs 不受这个限制
 # TARGETS和PROGRAMS 的默认权限是OWNER_EXECUTE, GROUP_EXECUTE, 和WORLD_EXECUTE，即755权限， programs 都是处理脚本类

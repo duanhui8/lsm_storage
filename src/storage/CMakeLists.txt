@@ -1,0 +1,8 @@
+# storage — OceanBase 4.4.2 style storage engine for MiniOB
+FILE(GLOB_RECURSE STORAGE_SRC *.cpp)
+ADD_LIBRARY(storage STATIC ${STORAGE_SRC})
+TARGET_INCLUDE_DIRECTORIES(storage PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/..
+  ${CMAKE_CURRENT_SOURCE_DIR}/../observer)
+TARGET_LINK_LIBRARIES(storage common pthread)

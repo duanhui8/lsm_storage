@@ -13,7 +13,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "common/type/integer_type.h"
 #include "common/value.h"
-#include "storage/common/column.h"
+#include "common/type/column.h"
 
 int IntegerType::compare(const Value &left, const Value &right) const
 {

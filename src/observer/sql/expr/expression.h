@@ -18,9 +18,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/memory.h"
 #include "common/lang/unordered_set.h"
 #include "common/value.h"
-#include "storage/field/field.h"
+#include "sql/parser/parse_defs.h"
 #include "sql/expr/aggregator.h"
-#include "storage/common/chunk.h"
 
 class Tuple;
 
@@ -92,7 +91,7 @@ public:
   /**
    * @brief 从 `chunk` 中获取表达式的计算结果 `column`
    */
-  virtual RC get_column(Chunk &chunk, Column &column) { return RC::UNIMPLEMENTED; }
+  virtual RC get_column(void *chunk, Column &column) { return RC::UNIMPLEMENTED; }
 
   /**
    * @brief 表达式的类型
@@ -126,7 +125,7 @@ public:
   /**
    * @brief 用于 ComparisonExpr 获得比较结果 `select`。
    */
-  virtual RC eval(Chunk &chunk, vector<uint8_t> &select) { return RC::UNIMPLEMENTED; }
+  virtual RC eval(void *chunk, vector<uint8_t> &select) { return RC::UNIMPLEMENTED; }
 
 protected:
   /**
@@ -193,32 +192,31 @@ class FieldExpr : public Expression
 {
 public:
   FieldExpr() = default;
-  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {}
-  FieldExpr(const Field &field) : field_(field) {}
+  FieldExpr(const string &table_name, const string &field_name, int field_idx, AttrType type, int len)
+    : table_name_(table_name), field_name_(field_name), field_idx_(field_idx), type_(type), len_(len) {}
 
   virtual ~FieldExpr() = default;
 
   bool equal(const Expression &other) const override;
 
-  unique_ptr<Expression> copy() const override { return make_unique<FieldExpr>(field_); }
+  unique_ptr<Expression> copy() const override { return make_unique<FieldExpr>(table_name_, field_name_, field_idx_, type_, len_); }
 
   ExprType type() const override { return ExprType::FIELD; }
-  AttrType value_type() const override { return field_.attr_type(); }
-  int      value_length() const override { return field_.meta()->len(); }
+  AttrType value_type() const override { return type_; }
+  int      value_length() const override { return len_; }
 
-  Field &field() { return field_; }
-
-  const Field &field() const { return field_; }
-
-  const char *table_name() const { return field_.table_name(); }
-  const char *field_name() const { return field_.field_name(); }
-
-  RC get_column(Chunk &chunk, Column &column) override;
+  const char *table_name() const { return table_name_.c_str(); }
+  const char *field_name() const { return field_name_.c_str(); }
+  int field_idx() const { return field_idx_; }
 
   RC get_value(const Tuple &tuple, Value &value) const override;
 
 private:
-  Field field_;
+  string table_name_;
+  string field_name_;
+  int field_idx_ = 0;
+  AttrType type_ = AttrType::UNDEFINED;
+  int len_ = 0;
 };
 
 /**
@@ -238,7 +236,7 @@ public:
   unique_ptr<Expression> copy() const override { return make_unique<ValueExpr>(value_); }
 
   RC get_value(const Tuple &tuple, Value &value) const override;
-  RC get_column(Chunk &chunk, Column &column) override;
+  RC get_column(void *chunk, Column &column) override;
   RC try_get_value(Value &value) const override
   {
     value = value_;
@@ -271,7 +269,7 @@ public:
   ExprType type() const override { return ExprType::CAST; }
 
   RC get_value(const Tuple &tuple, Value &value) const override;
-  RC get_column(Chunk &chunk, Column &column) override;
+  RC get_column(void *chunk, Column &column) override;
 
   RC try_get_value(Value &value) const override;
 
@@ -311,7 +309,7 @@ public:
    * @brief 根据 ComparisonExpr 获得 `select` 结果。
    * select 的长度与chunk 的行数相同，表示每一行在ComparisonExpr 计算后是否会被输出。
    */
-  RC eval(Chunk &chunk, vector<uint8_t> &select) override;
+  RC eval(void *chunk, vector<uint8_t> &select) override;
 
   unique_ptr<Expression> &left() { return left_; }
   unique_ptr<Expression> &right() { return right_; }
@@ -416,7 +414,7 @@ public:
 
   RC get_value(const Tuple &tuple, Value &value) const override;
 
-  RC get_column(Chunk &chunk, Column &column) override;
+  RC get_column(void *chunk, Column &column) override;
 
   RC try_get_value(Value &value) const override;
 
@@ -511,7 +509,7 @@ public:
 
   RC get_value(const Tuple &tuple, Value &value) const override;
 
-  RC get_column(Chunk &chunk, Column &column) override;
+  RC get_column(void *chunk, Column &column) override;
 
   Type aggregate_type() const { return aggregate_type_; }
 

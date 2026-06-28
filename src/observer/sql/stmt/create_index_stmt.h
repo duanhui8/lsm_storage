@@ -17,8 +17,8 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/stmt.h"
 
 struct CreateIndexSqlNode;
-class Table;
-class FieldMeta;
+// class Table; (removed)
+// class FieldMeta; (removed)
 
 /**
  * @brief 创建索引的语句
@@ -27,7 +27,7 @@ class FieldMeta;
 class CreateIndexStmt : public Stmt
 {
 public:
-  CreateIndexStmt(Table *table, const FieldMeta *field_meta, const string &index_name)
+  CreateIndexStmt(Table *table, void *field_meta, const string &index_name)
       : table_(table), field_meta_(field_meta), index_name_(index_name)
   {}
 
@@ -36,7 +36,7 @@ public:
   StmtType type() const override { return StmtType::CREATE_INDEX; }
 
   Table           *table() const { return table_; }
-  const FieldMeta *field_meta() const { return field_meta_; }
+  void *field_meta() const { return field_meta_; }
   const string    &index_name() const { return index_name_; }
 
 public:
@@ -44,6 +44,6 @@ public:
 
 private:
   Table           *table_      = nullptr;
-  const FieldMeta *field_meta_ = nullptr;
+  void *field_meta_ = nullptr;
   string           index_name_;
 };

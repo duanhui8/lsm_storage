@@ -16,8 +16,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "common/sys/rc.h"
-#include "storage/db/db.h"
-#include "storage/table/table.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -51,7 +49,7 @@ RC FilterStmt::create(Db *db, Table *default_table, unordered_map<string, Table 
 }
 
 RC get_table_and_field(Db *db, Table *default_table, unordered_map<string, Table *> *tables,
-    const RelAttrSqlNode &attr, Table *&table, const FieldMeta *&field)
+    const RelAttrSqlNode &attr, Table *&table, void *&field)
 {
   if (common::is_blank(attr.relation_name.c_str())) {
     table = default_table;
@@ -93,7 +91,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   if (condition.left_is_attr) {
     Table           *table = nullptr;
-    const FieldMeta *field = nullptr;
+    void *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
     if (rc != RC::SUCCESS) {
       LOG_WARN("cannot find attr");
@@ -110,7 +108,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   if (condition.right_is_attr) {
     Table           *table = nullptr;
-    const FieldMeta *field = nullptr;
+    void *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
     if (rc != RC::SUCCESS) {
       LOG_WARN("cannot find attr");

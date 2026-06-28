@@ -15,8 +15,6 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/create_index_stmt.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
-#include "storage/db/db.h"
-#include "storage/table/table.h"
 
 using namespace std;
 using namespace common;
@@ -40,7 +38,7 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
-  const FieldMeta *field_meta = table->table_meta().field(create_index.attribute_name.c_str());
+  void *field_meta = table->table_meta().field(create_index.attribute_name.c_str());
   if (nullptr == field_meta) {
     LOG_WARN("no such field in table. db=%s, table=%s, field name=%s", 
              db->name(), table_name, create_index.attribute_name.c_str());

@@ -12,6 +12,55 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2022/12/14.
 //
 
+/**
+ * ==========================================================================
+ * ★★★【核心学习文件】physical_plan_generator.cpp — 物理计划生成器 ★★★
+ * ==========================================================================
+ *
+ * ★ 定位：把 LogicalOperator 树转换成 PhysicalOperator 树。
+ *   这是"逻辑 → 物理"的关键转换步骤。
+ *
+ * ★ 逻辑计划 vs 物理计划：
+ *   LogicalOperator  — "做什么"（TableGet, Predicate, Project...）
+ *   PhysicalOperator  — "怎么做"（TableScan vs IndexScan, 具体算法）
+ *
+ * ★ 核心转换示例：
+ *   TableGet(t1) → 检查条件 → 有索引匹配 → IndexScan(t1, idx_id)
+ *                            → 无索引匹配 → TableScan(t1)
+ *
+ *   Predicate(expr) → PredicatePhysicalOperator(expr)
+ *   Project(exprs)  → ProjectPhysicalOperator(exprs)
+ *   Join(t1, t2)    → NestedLoopJoin 或 HashJoin
+ *
+ * ★★★ 最重要的方法：create_plan(TableGetLogicalOperator) ★★★
+ *   这是索引选择的核心逻辑：
+ *   1. 遍历 TableGet 的所有下推谓词
+ *   2. 找到"等值比较"且"某一边是索引列"的条件
+ *   3. 如果找到匹配的索引 → 创建 IndexScanPhysicalOperator
+ *   4. 否则 → 创建 TableScanPhysicalOperator（全表扫描）
+ *
+ *   这就是"基于规则的优化"（RBO）：
+ *   有索引就用索引，没有就全表扫描。
+ *   规则很简单，但对于教学项目足够了。
+ *
+ * ★ Vec 版本（create_vec / create_vec_plan）：
+ *   向量化执行路径。逻辑相同但使用向量化算子（TableScanVec 等）。
+ *   通过 session 的 execution_mode 选择 Tuple 模式或 Vec 模式。
+ *
+ * 💡 提问：MiniOB 的索引选择只检查 EQUAL_TO 和 NOT_EQUAL，
+ *   为什么不支持 <, >, <=, >= （范围扫描）？
+ *   （提示：B+ 树天然支持范围扫描。这只是一个教学简化
+ *          — 加上范围扫描支持只需要多几行代码判断 LESS_THAN 等操作符。
+ *          可以自己试试扩展！）
+ *
+ * 💡 提问：如果 WHERE 条件有多个等值比较（id=5 AND name='Alice'），
+ *   且两个列都有索引，选择哪个？
+ *   （提示：当前代码遍历 predicates，使用第一个匹配的索引就 break。
+ *          这是最简单的策略。生产数据库会计算每个索引的"选择性"
+ *          （selectivity），选择过滤性更好的索引）
+ * ==========================================================================
+ */
+
 #include "common/log/log.h"
 #include "sql/expr/expression.h"
 #include "session/session.h"
@@ -46,6 +95,9 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
+/**
+ * ★ create — 根据逻辑算子类型分发
+ */
 RC PhysicalPlanGenerator::create(LogicalOperator &logical_operator, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
   RC rc = RC::SUCCESS;
@@ -120,10 +172,39 @@ RC PhysicalPlanGenerator::create_vec(LogicalOperator &logical_operator, unique_p
   return rc;
 }
 
+/**
+ * ★★★ create_plan(TableGetLogicalOperator) — 索引选择的核心逻辑 ★★★
+ *
+ * 这是物理优化中最重要的方法：决定用 IndexScan 还是 TableScan。
+ *
+ * 索引匹配逻辑（当前只支持等值匹配）：
+ *   1. 遍历所有下推谓词（predicates）
+ *   2. 找到 ComparisonExpr 类型且操作符为 EQUAL_TO 的条件
+ *   3. 确保一边是字段引用（FieldExpr），另一边是常量值（ValueExpr）
+ *   4. 查找该字段是否有索引（table->find_index_by_field）
+ *   5. 有匹配索引 → IndexScan，无匹配 → TableScan
+ *
+ * ★ 为什么叫"基于规则的优化"（RBO）？
+ *   这里的优化策略是硬编码的规则，而不是基于代价的计算：
+ *   - 规则1: 有索引 → 用索引
+ *   - 规则2: 没索引 → 全表扫描
+ *   没有考虑"索引扫描可能比全表扫描更慢"的场景（比如表只有 10 行）。
+ *
+ *   "基于代价的优化"（CBO）会：
+ *   - 估算 IndexScan 的代价（CPU + I/O）
+ *   - 估算 TableScan 的代价
+ *   - 选择代价更小的
+ *
+ * ★ 下推谓词的命运：
+ *   找到索引匹配的条件后，该条件从 predicates 中移除（被索引覆盖）。
+ *   剩余条件通过 set_predicates() 传给算子做 filter。
+ *   但当前代码中，predicates 全部传给算子（没有移除已匹配的）—
+ *   这意味着索引已经过滤了 id=5，filter 还会再检查一次 id=5。
+ *   这是当前实现的一个小冗余（不影响正确性，略影响性能）。
+ */
 RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
   vector<unique_ptr<Expression>> &predicates = table_get_oper.predicates();
-  // 看看是否有可以用于索引查找的表达式
   Table *table = table_get_oper.table();
 
   Index     *index      = nullptr;
@@ -159,9 +240,10 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
       }
 
       const Field &field = field_expr->field();
+      // ★ 关键：查表是否有该列的索引
       index              = table->find_index_by_field(field.field_name());
       if (nullptr != index) {
-        break;
+        break;  // ★ 找到第一个匹配的索引就停止
       }
     }
   }
@@ -298,6 +380,16 @@ RC PhysicalPlanGenerator::create_plan(ExplainLogicalOperator &explain_oper, uniq
   return rc;
 }
 
+/**
+ * ★ create_plan(JoinLogicalOperator) — JOIN 物理计划
+ *
+ * 当前默认使用 NestedLoopJoin（嵌套循环连接）。
+ * HashJoin 通过 session->hash_join_on() 和 can_use_hash_join() 判断是否可用，
+ * 但 can_use_hash_join() 当前总是返回 false（留作练习）。
+ *
+ * NestedLoopJoin 时间复杂度：O(left_rows × right_rows)
+ * 适合小表或已通过索引过滤后的结果集。
+ */
 RC PhysicalPlanGenerator::create_plan(JoinLogicalOperator &join_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
   RC rc = RC::SUCCESS;
@@ -342,6 +434,13 @@ RC PhysicalPlanGenerator::create_plan(CalcLogicalOperator &logical_oper, unique_
   return rc;
 }
 
+/**
+ * ★ create_plan(GroupByLogicalOperator) — GROUP BY 物理计划
+ *
+ * 两种策略：
+ *   - 无 GROUP BY 列 → ScalarGroupBy（全局聚合，如 SELECT COUNT(*) FROM t1）
+ *   - 有 GROUP BY 列 → HashGroupBy（通过 Hash 表分组）
+ */
 RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
   RC rc = RC::SUCCESS;
@@ -453,7 +552,6 @@ RC PhysicalPlanGenerator::create_vec_plan(ExplainLogicalOperator &explain_oper, 
   vector<unique_ptr<LogicalOperator>> &child_opers = explain_oper.children();
 
   RC rc = RC::SUCCESS;
-  // reuse `ExplainPhysicalOperator` in explain vectorized physical plan
   unique_ptr<PhysicalOperator> explain_physical_oper(new ExplainPhysicalOperator);
   for (unique_ptr<LogicalOperator> &child_oper : child_opers) {
     unique_ptr<PhysicalOperator> child_physical_oper;

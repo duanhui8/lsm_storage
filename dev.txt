@@ -1,0 +1,277 @@
+================================================================================
+  MiniOB 源码学习与 OceanBase 4.4.2 对比分析 — 开发过程记录
+  日期: 2025-06-25 ~ 2025-06-28
+  源码路径: /opt/miniob | OceanBase 4.4.2: /opt/oceanbase4.4.2
+================================================================================
+
+七、CLOG + PALF 日志系统实现（2025-06-26 夜间）
+--------------------------------------------------------------------------------
+【目标】为 mystorage 实现 CLOG（Commit Log）功能，照抄 OB 4.4.2 设计。
+
+【探索阶段】启动 3 个并行 agent 探索:
+  - Agent 1: OB 4.4.2 PALF 架构 → ~130 文件, ~53K 行, 4 层架构 (PalfEnv→PalfHandleImpl→LogEngine→LogStorage)
+  - Agent 2: OB 4.4.2 CLOG 集成 → LogGroupEntry 磁盘格式, ObLogBaseHeader(20B), write/replay 路径
+  - Agent 3: mystorage 现状 → 无 WAL, 无重启恢复, SSTable 读取残缺, Compaction 无调度
+
+【实现的文件】(32 个文件, 2433 行):
+  mystorage/logservice/
+    ├── ob_log_base_type.h      — ObLogBaseType 枚举 (TABLET_OP_LOG_BASE_TYPE=2 等)
+    ├── ob_log_base_header.h    — 每条日志的 20B 前缀 (version, log_type, barrier flags)
+    ├── ob_log_handler.h/cpp    — 写入/回放分发, 管理 replay_handler / role_change_handler
+    ├── ob_log_service.h/cpp    — 日志服务启动/回收协调
+    └── palf/ (Paxos-based Append Log Framework — 简化版)
+        ├── log_define.h        — 常量枚举 (block=64MB, magic=0x4752 "GR")
+        ├── lsn.h/cpp           — LSN 结构体 (uint64_t val_)
+        ├── log_entry.h/cpp     — LogEntry + LogGroupEntryHeader (组提交格式)
+        ├── log_storage.h/cpp   — 块文件管理 (append/read/truncate)
+        ├── log_meta.h/cpp      — 配置元数据 (ConfigMeta/SnapshotMeta/ModeMeta)
+        ├── log_meta_entry.h/cpp— 磁盘元数据序列化
+        ├── log_io_context.h    — IO 回调上下文
+        ├── log_io_adapter.h/cpp— 磁盘 IO 适配器
+        ├── log_io_worker.h/cpp — 后台 IO 线程池
+        ├── log_cache.h         — 内存日志读缓存
+        ├── log_writer_utils.h  — LogWriteBuf 序列化辅助
+        ├── palf_options.h      — 配置项 (AccessMode, PalfAppendOptions)
+        ├── palf_handle.h/cpp   — RAII 句柄包装
+        ├── palf_handle_impl.h/cpp — 每个 LS 的日志流实例 (LSN 分配 + 磁盘写入)
+        └── palf_env_impl.h/cpp — 管理所有 PalfHandleImpl 的容器
+
+【磁盘格式】(照抄 OB 4.4.2):
+  PALF 日志文件 = 64MB Block 序列
+    [LogBlockHeader: magic=0x4942 "IB"]
+    [LogGroupEntry: [LogGroupEntryHeader: magic=0x4752 "GR"] [LogEntry:magic=0x4C48 "LH"][payload]]
+
+【集成修改】(4 个文件):
+  - ob_tablet.h/cpp — 添加 ObLogService + ObLogHandler 管理
+  - ob_table_store.h/cpp — 添加 log_handler_ 引用
+  - ob_memtable.h/cpp — ObIReplaySubHandler, set() 写 WAL, replay() 反序列化写入
+  - CMakeLists.txt — 递归编译 + 增加 pthread 链接
+
+【写入路径】:
+  ObMemtable::set(ctx, row)
+    → 序列化: [dml_flag][key_len][key][val_len][value]
+    → ObLogHandler::append(buf, len, TABLET_OP_LOG_BASE_TYPE, &lsn)
+    → PalfHandleImpl::append() → do_append_()
+    → 构造 LogGroupEntryHeader → LogStorage::append() → 磁盘
+    → 然后写 MemTable (MVCC)
+
+【恢复路径】:
+  ObTablet::init() → ObLogService::replay_ls()
+    → PalfHandle::read() 遍历所有 GroupEntry
+    → ObLogHandler::replay() 解析 ObLogBaseHeader
+    → 分发到 ObIReplaySubHandler
+    → ObMemtable::replay() 反序列化行 → set() (禁用 WAL 避免递归)
+
+【省略项】(OB 4.4.2 有, mystorage 不要):
+  - Election (Paxos proposer/acceptor) — 单节点
+  - LogRpc/LogNetService — 无网络
+  - LogSlidingWindow/LogConfigMgr/LogStateMgr — 无分布式共识
+  - SCN 分布式时钟 → 用 int64_t 替代
+  - ObLinkHashMap → std::unordered_map
+
+【编译验证】: cmake .. && make mystorage → [100%] Built target mystorage ✅
+
+一、SQL 层与存储层的入口接口 —— DefaultHandler
+--------------------------------------------------------------------------------
+【问题】default_handler.h 是 SQL 层与 oblsm 存储引擎的入口接口吗？
+
+【结论】是。DefaultHandler 是 SQL 层与存储层之间的门面(Facade)接口,全局单例。
+
+  架构位置:
+    SQL 层 (execute_stage, session, init)
+           │
+    DefaultHandler  ← 门面，全局单例 the_default_handler()
+           │
+    Db  ← 管理 TableEngine (heap 或 lsm)
+           │
+    Table / TableEngine
+
+  调用方：
+    - src/observer/common/init.cpp          系统初始化
+    - src/observer/sql/executor/execute_stage.cpp  SQL执行阶段
+    - src/observer/session/session.cpp       会话管理
+
+【关键发现】DDL 和 DML 走不同路径:
+  - DDL (CREATE TABLE 等): CommandExecutor → DefaultHandler::create_table() → Db → Table
+  - DML (SELECT/INSERT 等): PhysicalOperator (Volcano模型) 直接操作 Table,不经过 DefaultHandler
+
+  DefaultHandler 只提供 DDL 接口 (create_table, find_table 等),没有 insert/select/update/delete。
+  原因是 Volcano 执行模型使用迭代器模式 (open→next→close),算子直接持有 Table* 调用其方法。
+
+
+二、OceanBase 中库与表的关系
+--------------------------------------------------------------------------------
+【问题1】oceanbase 中库和表是什么关系？宏块中如何维护库表关系？
+
+  层次结构:
+    Tenant(租户) → Database(库) → Table(表) → Tablet/Partition(分区)
+                                          → SSTable(存储文件)
+                                                → Macro Block(宏块, 2MB)
+                                                      → Micro Block(微块, 16KB)
+
+  宏块头部记录: table_id, tablet_id, data_version, macro_block_id, row_count, rowkey_range
+  宏块只记录 table_id,不直接记录 database 信息。库与表的从属关系通过元数据表维护:
+    table_id → __all_table → database_id → __all_database → database_name
+
+【问题2】元数据表（schema 层）保存在哪里？
+
+  三层自举机制:
+    第一层: 编译期硬编码 — 核心系统表 schema 编译进 observer 二进制,不需要从磁盘读
+    第二层: 系统 Tablet — 固定 tablet_id,通过 Superblock 定位
+    第三层: Superblock/Bootstrap — 记录系统 Tablet 所在日志流位置
+
+  启动流程:
+    Superblock → 系统 Tablet → 用硬编码 schema 解析 → 读出 __all_table 内容 → 访问用户表
+
+【问题3】miniob 的库名是写死 sys 的吗？
+
+  更早版本: 只有 sys 一个数据库,写死。
+  当前版本: sys 仍然硬编码为系统库(init 时强制创建+打开),但已支持多数据库:
+    - create_db() ✅   drop_db() ✅   list_dbs() ✅
+    - sys 受保护不可删除
+  这是 MiniOB 的过渡状态,对应 OceanBase 的系统表空间概念但不持久化元数据。
+
+
+三、DiskBufferPool —— 页面缓存(Buffer Pool)
+--------------------------------------------------------------------------------
+【问题1】disk_buffer_pool.cpp 是干嘛的？对应 OceanBase 4.4.2 哪个组件？
+
+  功能: 管理数据库页面在内存和磁盘之间的映射,实现页面缓存。
+  核心职责: 页面缓存、LRU 淘汰、页面分配/释放(bitmap)、DoubleWrite(防部分写)、崩溃恢复(redo)
+
+  三层架构:
+    BufferPoolManager   ← 管理所有 DiskBufferPool, 分配 buffer_pool_id
+    DiskBufferPool      ← 单个文件的缓冲池, get_this_page/allocate_page/dispose_page
+    BPFrameManager      ← Frame 对象池, LRU 淘汰(LinkedHashMap)
+
+  对应 OceanBase 4.4.2 的组件(非一对一):
+    DiskBufferPool        → ObDiskBufferPool / ObBufferPool
+    BPFrameManager        → ObBlockCache (块级缓存)
+    DoubleWriteBuffer     → ObDoubleWriteManager
+    BufferPoolManager     → ObTenantDiskBufferPool
+
+  核心概念对照: Page↔Macro Block, Frame↔Cache Handle, pin/unpin 概念相同
+
+【问题2】disk_buffer_pool 相当于 OceanBase 的 KV Cache 吗？
+
+  不是。两个不同层次的缓存:
+    OceanBase: KV Cache (行级缓存,纯读) → Block Buffer Pool (页面缓存) → 磁盘
+    MiniOB:   (没有 KV Cache) → DiskBufferPool → 磁盘
+
+  disk_buffer_pool = InnoDB Buffer Pool = OceanBase Block Buffer Pool (同一层)
+  KV Cache 是坐在 Buffer Pool 上面的另一层缓存
+
+【问题3】MiniOB 除了 disk_buffer_pool 还有哪些缓存？
+
+  ✅ DiskBufferPool     — 页面缓存,唯一完整实现
+  ❌ ObLRUCache         — LSM Block Cache,空壳 stub
+  ❌ PlanCacheStage     — 执行计划缓存,空壳 stub (类体为空)
+  ❌ QueryCacheStage    — 查询结果缓存,空壳 stub
+  ✅ common::LruCache   — 底层 LRU 工具类(被 Buffer Pool 使用)
+
+
+四、mystorage vs OceanBase 4.4.2 存储引擎完整对比
+--------------------------------------------------------------------------------
+【规模对比】
+  mystorage:  ~3,700 行, 47 个文件, 5 个子目录
+  OB 4.4.2:  ~354,000 行 (仅 storage/), 38+ 个子目录, 数千文件
+  倍数: OB 4.4.2 是 mystorage 的 ~95 倍
+
+【核心组件一一对应】
+  mystorage                    OceanBase 4.4.2
+  ─────────                    ──────────────
+  ObStore                       ObStorageEngine
+  ObTablet                      ObTablet (功能丰富得多)
+  ObTableStore                  ObTableStore
+  ObITable                      ObITable (带 ref counting)
+  ObIMemtable                   ObIMemtable
+  ObMemtable                    ObMemtable (带 epoch/safe_read)
+  ObMvccEngine                  ObMvccEngine (支持更多写类型)
+  ObMvccRow (简化)              ObMvccRow (5x 成员变量)
+  ObMvccTransNode (7字段)       ObMvccTransNode (30+ 字段)
+  ObQueryEngine (hash+std::map) ObQueryEngine (hash+ObKeyBtree)
+  ObFreezer                     ObFreezer (log stream 级别)
+  ObMemTableMgr                  ObTabletMemtableMgr
+  ObSSTable                     ObSSTable (10x 大小)
+  ObMacroBlock                  ObMacroBlockHandle + Writer
+  ObMicroBlockWriter (仅 flat)  ObMicroBlockWriter (flat/encoding/cs)
+  ObCompaction (三级)           完整 compaction 框架 (40+ 文件)
+  ObKVCache (简单 LRU)          ObKVCache (多级、hazard pointer)
+
+【mystorage 保留得最好的部分】
+  ✅ ObITable 多态体系 (MemTable/SSTable 统一接口) — 架构骨架正确
+  ✅ MVCC 版本链模型 (ObMvccRow → ObMvccTransNode 链表) — 核心概念完整
+  ✅ Macro/Micro Block 磁盘格式 — magic number, version 与 OB 4.4.2 一致
+  ✅ 三级 Compaction (mini/minor/major) — 函数签名正确
+  ✅ ObKVCache — 标准 LRU 实现
+
+【mystorage 最大的简化】
+  ✗ ObKeyBtree → std::map (详见第五节)
+  ✗ 没有 Log Stream (分布式 WAL 基石)
+  ✗ 没有分布式事务支持 (ELR、两阶段提交、事务状态表)
+  ✗ 没有并发控制框架 (epoch-based safe read、lock wait)
+  ✗ 没有 Compaction 调度器 (DAG、优先级、并发度)
+  ✗ 没有列存、备份、DDL在线变更、向量索引等高级功能
+
+【OB 4.4.2 有而 mystorage 完全没有的模块】(30+)
+  access, backup, blockstore, checkpoint, column_store, concurrency_control,
+  ddl, direct_load, fts, high_availability, lob, lock_wait_mgr, ls, macro_cache,
+  meta_mem, meta_store, multi_data_source, mview, restore, slog, tablelock,
+  tablet, tx, tx_table, vector_index ...
+
+
+五、ObKeyBtree —— MemTable 内部的并发 B-Tree
+--------------------------------------------------------------------------------
+【问题】mystorage 用 std::map 代替了 ObKeyBtree，ObKeyBtree 是什么？
+
+【答案】ObKeyBtree 是 MemTable 内部 ObQueryEngine 用于支持范围扫描的 B-Tree。
+
+  在 MemTable 中的位置:
+    ObQueryEngine
+      ├── Hash Table (ObMtHash)  ← 点查 O(1)
+      └── ObKeyBtree             ← 范围扫描 O(log N)
+
+  关键设计（源码注释 ob_keybtree.h:243-247）:
+    "OceanBase's keybtree is a btree(we are not b+tree) that is specially
+     optimized for concurrent insertion. It uses the techniques of epoch based
+     reclaimation and Copy-on-Write to allow the high capibility under high
+     concurrency."
+
+  与普通 B+Tree 的区别:
+    类型:      B-Tree (数据可存内部节点) vs B+Tree (数据只存叶子)
+    并发写:    Copy-on-Write 无锁 vs 通常用 latch
+    内存回收:  Epoch-based (等所有读者离开) vs 写完即释放
+    目标:      MemTable 专用内存索引 vs 通用磁盘索引
+    节点分配:  CPU 分区分配器 vs malloc/free
+
+  为什么需要特制 B-Tree：
+    MemTable 多线程并发写入同一有序结构。
+    如果用 std::map + 大锁，写性能极差。
+    ObKeyBtree 用 COW + epoch 实现无锁并发读 + 高效写:
+      写线程: COW 复制节点路径 → 原子切换指针 → 旧节点不立即释放
+      读线程: 持有 hazard pointer 安全遍历旧树
+      epoch 结束: 确认无读者后回收旧节点
+
+  规模: 2760 行 (ob_keybtree.h 323行 + ob_keybtree.cpp 1789行 + ob_keybtree_deps.h 648行)
+
+  mystorage 用 std::map<uint64_t, ObMvccRow*> 替代是正确的教学简化:
+    目的: 理解 "MemTable 需要有序结构支持 range scan"
+    不需要: 让学生陷入 2760 行并发 B-Tree 实现细节
+
+
+六、关键架构洞察
+--------------------------------------------------------------------------------
+1. 两个存储引擎并存
+   - oblsm: 独立的 LSM-Tree 引擎 (LevelDB 风格,不依赖 observer)
+   - mystorage: 对照 OceanBase 4.4.2 精简移植的引擎
+   - 老 Heap 引擎: disk_buffer_pool + record_manager (教学基线)
+   三者各自独立,通过 TableEngine 策略模式接入 SQL 层
+
+2. mystorage 的设计哲学
+   每个文件头部都标了 "Refer to: /opt/oceanbase4.4.2/src/storage/xxx"
+   目标是让读者看完 mystorage 的简化版后,能看懂 OB 4.4.2 的生产代码。
+   它不是可运行的引擎,而是一份 "OB 4.4.2 存储引擎导读地图"。
+
+3. 缓存分层 (从底层到上层)
+   磁盘文件 → Buffer Pool (页面级) → Block Cache (块级, stub) → KV Cache (行级,OB独有)
+   MiniOB 只有最底层是完整的,上层都是占位符。

@@ -59,6 +59,7 @@ enum class StorageEngine
 {
   HEAP = 0,
   LSM,
+  OB,
   UNKNOWN_ENGINE
 };
 

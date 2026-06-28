@@ -16,7 +16,6 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/expr/expression.h"
 #include "sql/operator/logical_operator.h"
-#include "storage/field/field.h"
 
 /**
  * @brief project 表示投影运算

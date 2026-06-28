@@ -945,12 +945,8 @@ RC MysqlCommunicator::send_result_rows(SessionEvent *event, SqlResult *sql_resul
   packet.resize(4 * 1024 * 1024);  // TODO warning: length cannot be fix
 
   int    affected_rows = 0;
-  if (event->session()->get_execution_mode() == ExecutionMode::CHUNK_ITERATOR
-      && event->session()->used_chunk_mode()) {
-    rc = write_chunk_result(sql_result, packet, affected_rows, need_disconnect);
-  } else {
-    rc = write_tuple_result(sql_result, packet, affected_rows, need_disconnect);
-  }
+  // Chunk mode removed with adapter layer — always use tuple result
+  rc = write_tuple_result(sql_result, packet, affected_rows, need_disconnect);
 
   // 所有行发送完成后，发送一个EOF或OK包
   if ((client_capabilities_flag_ & CLIENT_DEPRECATE_EOF) || no_column_def) {
@@ -1016,15 +1012,16 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
   }
   return rc;
 }
-RC MysqlCommunicator::write_chunk_result(SqlResult *sql_result, vector<char> &packet, int &affected_rows, bool &need_disconnect)
+RC MysqlCommunicator::write_chunk_result(SqlResult *, vector<char> &, int &, bool &)
 {
+  // Chunk mode removed with adapter layer
+  return RC::UNIMPLEMENTED;
+#if 0
   Chunk chunk;
   RC rc = RC::SUCCESS;
   while (RC::SUCCESS == (rc = sql_result->next_chunk(chunk))) {
     int column_num = chunk.column_num();
-    if (column_num == 0) {
-      continue;
-    }
+    if (column_num == 0) continue;
     for (int i = 0; i < chunk.rows(); i++) {
       affected_rows++;
       // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset.html
@@ -1052,4 +1049,5 @@ RC MysqlCommunicator::write_chunk_result(SqlResult *sql_result, vector<char> &pa
     }
   }
   return rc;
+#endif
 }
