@@ -49,14 +49,20 @@ struct ObStorageLogEntry {
   static int32_t get_header_size() { return sizeof(uint32_t)*2 + sizeof(uint64_t) + sizeof(int32_t)*2; }
 };
 
-// SLOG log types (matching OB 4.4.2)
+// SLOG log types (from OB 4.4.2 ob_storage_log_struct.h)
+// OB 4.4.2: SLOG is only for Tenant/LS/Tablet — NOT for databases
 enum class ObStorageLogType : int32_t {
   SLOG_INVALID = 0,
-  SLOG_CREATE_TABLET = 1,
-  SLOG_DELETE_TABLET = 2,
-  SLOG_CREATE_SSTABLE = 3,
-  SLOG_CREATE_DATABASE = 4,
-  SLOG_DROP_DATABASE = 5,
+  OB_REDO_LOG_CREATE_TENANT_PREPARE = 2,
+  OB_REDO_LOG_CREATE_TENANT_COMMIT = 3,
+  OB_REDO_LOG_CREATE_TENANT_ABORT = 4,
+  OB_REDO_LOG_DELETE_TENANT_PREPARE = 5,
+  OB_REDO_LOG_DELETE_TENANT_COMMIT = 6,
+  OB_REDO_LOG_CREATE_LS = 9,
+  OB_REDO_LOG_CREATE_LS_COMMIT = 10,
+  OB_REDO_LOG_CREATE_LS_ABORT = 11,
+  OB_REDO_LOG_DELETE_LS = 13,
+  OB_REDO_LOG_DELETE_TABLET = 15,
 };
 
 /**
