@@ -356,3 +356,22 @@ Finish dump configuration
 [2026-06-28 14:58:06.883667 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
 [2026-06-28 14:58:06.883683 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
 [2026-06-28 14:58:12.005142 pid:37103 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 15:36:55.327695 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:201] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 15:36:55.339978 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:50] >> ObDDLService PALF + SystemTablet inited, base_dir=miniob/store
+[2026-06-28 15:36:55.340104 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:233] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=0)
+[2026-06-28 15:36:55.340141 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:233] >> CLOG replay: CREATE DATABASE test (id=2, lsn=83)
+[2026-06-28 15:36:55.340159 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:233] >> CLOG replay: CREATE DATABASE sys (id=0, lsn=167)
+[2026-06-28 15:36:55.340177 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:210] >> SystemTablet scan: recovered 0 databases from LSM
+[2026-06-28 15:36:55.340191 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:213] >> ObDDLService: PALF CLOG + SystemTablet recovery completed
+[2026-06-28 15:36:55.340286 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
+[2026-06-28 15:36:55.340311 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-28 15:37:09.939046 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 15:37:27.210291 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: drop_database@ob_ddl_service.cpp:145] >> ObDDLService: DROP DATABASE test via PALF CLOG, lsn=333
+[2026-06-28 15:37:27.210391 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: execute@command_executor.cpp:167] >> DDL executed (via SchemaService). rc=0
+[2026-06-28 15:37:27.224180 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 15:37:31.839282 pid:7990 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

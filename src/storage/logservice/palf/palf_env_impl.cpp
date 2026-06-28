@@ -15,7 +15,7 @@ int PalfEnvImpl::init(const char *base_dir)
 {
   if (is_inited_) return -1;
   base_dir_ = base_dir;
-  log_dir_ = base_dir_ + "/logdata";
+  log_dir_ = base_dir_ + "/clog";
   std::string cmd = "mkdir -p " + log_dir_;
   ::system(cmd.c_str());
 
