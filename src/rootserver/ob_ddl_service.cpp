@@ -131,42 +131,12 @@ int ObDDLService::recover_schema()
 {
   if (!is_inited_ || log_service_ == nullptr) return 0;
 
-  // 1. PALF CLOG replay (for DDL entries)
+  // OB 4.4.2: PALF CLOG replay restores system tablet MemTable state.
+  // SchemaService is rebuilt from the DDL replay handler (no extra scan needed).
   int ret = log_service_->replay_ls(DDL_LS_ID);
   if (ret != 0) { LOG_WARN("ObDDLService: PALF replay returned %d", ret); }
 
-  // 2. Scan __all_database system tablet to rebuild SchemaService
-  if (system_tablet_ != nullptr) {
-    auto *store = system_tablet_->get_table_store();
-    storage::ObStoreCtx ctx;
-    ctx.tx_id_ = 1;
-    ctx.snapshot_version_ = storage::OB_INVALID_VERSION;
-    std::vector<storage::ObStoreRow> rows;
-    storage::ObStoreRowkey start_key("", 0);
-    storage::ObStoreRowkey end_key("\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 8);
-    store->scan(ctx, start_key, false, end_key, false, rows);
-
-    int recovered = 0;
-    for (auto &row : rows) {
-      if (row.is_deleted_ || row.row_value_.empty()) continue;
-      const char *p = row.row_value_.data();
-      uint64_t db_id;
-      std::memcpy(&db_id, p, sizeof(uint64_t)); p += sizeof(uint64_t);
-      int32_t name_len;
-      std::memcpy(&name_len, p, sizeof(int32_t)); p += sizeof(int32_t);
-      std::string db_name(p, name_len);
-
-      // Directly populate SchemaService (don't go through ddl_operator_ to avoid re-writing to tablet)
-      auto &schema = share::schema::ObSchemaService::instance();
-      uint64_t tmp_id = 0;
-      schema.create_database(db_name.c_str(), tmp_id);
-      recovered++;
-      LOG_INFO("SystemTablet recovery: %s (id=%lu)", db_name.c_str(), db_id);
-    }
-    LOG_INFO("SystemTablet scan: recovered %d databases from __all_database LSM", recovered);
-  }
-
-  LOG_INFO("ObDDLService: PALF CLOG + SystemTablet recovery completed");
+  LOG_INFO("ObDDLService: PALF CLOG replay completed");
   return 0;
 }
 
@@ -184,11 +154,12 @@ int ObDDLService::replay(const void *buffer, int64_t nbytes,
   std::memcpy(name, p, name_len); p += name_len;
 
   if (type == 1) {
+    // OB 4.4.2: CLOG replay rebuilds SchemaService from log — no tablet write needed
     uint64_t new_id = 0;
-    ddl_operator_.create_database(name, new_id);
+    share::schema::ObSchemaService::instance().create_database(name, new_id);
     LOG_INFO("CLOG replay: CREATE DATABASE %s (id=%lu, lsn=%lu)", name, new_id, lsn.val_);
   } else if (type == 2) {
-    ddl_operator_.drop_database(name);
+    share::schema::ObSchemaService::instance().drop_database(name);
     LOG_INFO("CLOG replay: DROP DATABASE %s (lsn=%lu)", name, lsn.val_);
   } else if (type == 3) {
     std::memcpy(&db_id, p, sizeof(db_id));
