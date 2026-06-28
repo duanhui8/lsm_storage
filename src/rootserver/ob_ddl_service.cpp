@@ -39,6 +39,10 @@ int ObDDLService::init(const char *base_dir) {
   system_tablet_ = new storage::ObTablet();
   ret = system_tablet_->init(SYSTEM_TABLET_ID, log_service_.get());
   if (ret != 0) { LOG_WARN("Failed to init system tablet"); }
+
+  // Wire __all_database tablet to ObDatabaseSqlService (via ObDDLOperator)
+  ddl_operator_.set_system_tablet(system_tablet_);
+
   // Register memtable as PALF replay handler for TABLET_OP
   if (system_tablet_ && system_tablet_->get_log_handler()) {
     auto *mt = system_tablet_->get_table_store()->get_active_memtable();
@@ -68,37 +72,9 @@ int ObDDLService::create_database(const char *db_name, uint64_t &database_id)
   std::free(log_buf);
   if (ret != 0) { LOG_ERROR("PALF append failed for CREATE DATABASE %s", db_name); return ret; }
 
-  // Schema service (in-memory)
+  // OB 4.4.2: ObDDLOperator writes to __all_database via ObDatabaseSqlService
   ret = ddl_operator_.create_database(db_name, database_id);
   if (ret != 0) return ret;
-
-  // Write to __all_database system tablet (LSM MemTable)
-  if (system_tablet_ != nullptr) {
-    auto *mt = system_tablet_->get_table_store()->get_active_memtable();
-    if (mt != nullptr) {
-      // Build row: [database_id 8B][db_name_len 4B][db_name]
-      int64_t row_size = sizeof(uint64_t) + sizeof(int32_t) + name_len;
-      char *row_buf = static_cast<char *>(std::malloc(row_size));
-      char *rp = row_buf;
-      std::memcpy(rp, &database_id, sizeof(database_id)); rp += sizeof(database_id);
-      std::memcpy(rp, &name_len, sizeof(int32_t)); rp += sizeof(int32_t);
-      std::memcpy(rp, db_name, name_len);
-
-      storage::ObStoreCtx ctx;
-      ctx.tx_id_ = 1;
-      storage::ObStoreRow row;
-      storage::ObStoreRowkey rk(reinterpret_cast<const char *>(&database_id), sizeof(database_id));
-      row.rowkey_ = rk;
-      row.dml_flag_ = blocksstable::ObDmlFlag::DF_INSERT;
-      row.row_value_.assign(row_buf, row_buf + row_size);
-      std::free(row_buf);
-      mt->set(ctx, row);
-
-      // Try freeze if memtable is full
-      system_tablet_->get_freezer()->try_freeze();
-      LOG_INFO("ObDDLService: wrote %s to __all_database MemTable", db_name);
-    }
-  }
 
   LOG_INFO("ObDDLService: CREATE DATABASE %s (id=%lu) via PALF CLOG, lsn=%lu",
            db_name, database_id, lsn.val_);
@@ -124,23 +100,6 @@ int ObDDLService::drop_database(const char *db_name)
 
   ret = ddl_operator_.drop_database(db_name);
   if (ret != 0) return ret;
-
-  // Write tombstone to __all_database system tablet
-  if (system_tablet_ != nullptr) {
-    auto *mt = system_tablet_->get_table_store()->get_active_memtable();
-    if (mt != nullptr) {
-      uint64_t db_id = 0; // query from schema
-      auto *schema = share::schema::ObSchemaService::instance().get_database_schema(db_name);
-      if (schema) db_id = schema->get_database_id();
-
-      storage::ObStoreCtx ctx; ctx.tx_id_ = 1;
-      storage::ObStoreRow row;
-      storage::ObStoreRowkey rk(reinterpret_cast<const char *>(&db_id), sizeof(db_id));
-      row.rowkey_ = rk;
-      row.dml_flag_ = blocksstable::ObDmlFlag::DF_DELETE;
-      mt->set(ctx, row);
-    }
-  }
 
   LOG_INFO("ObDDLService: DROP DATABASE %s via PALF CLOG, lsn=%lu", db_name, lsn.val_);
   return 0;
@@ -176,15 +135,13 @@ int ObDDLService::recover_schema()
   int ret = log_service_->replay_ls(DDL_LS_ID);
   if (ret != 0) { LOG_WARN("ObDDLService: PALF replay returned %d", ret); }
 
-  // 2. Scan system tablet (__all_database) to recover databases from MemTable + SSTable
+  // 2. Scan __all_database system tablet to rebuild SchemaService
   if (system_tablet_ != nullptr) {
     auto *store = system_tablet_->get_table_store();
     storage::ObStoreCtx ctx;
     ctx.tx_id_ = 1;
     ctx.snapshot_version_ = storage::OB_INVALID_VERSION;
     std::vector<storage::ObStoreRow> rows;
-
-    // Full scan of system tablet
     storage::ObStoreRowkey start_key("", 0);
     storage::ObStoreRowkey end_key("\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 8);
     store->scan(ctx, start_key, false, end_key, false, rows);
@@ -192,22 +149,21 @@ int ObDDLService::recover_schema()
     int recovered = 0;
     for (auto &row : rows) {
       if (row.is_deleted_ || row.row_value_.empty()) continue;
-      // Parse: [database_id 8B][name_len 4B][name]
       const char *p = row.row_value_.data();
       uint64_t db_id;
-      std::memcpy(&db_id, p, sizeof(uint64_t));
-      p += sizeof(uint64_t);
+      std::memcpy(&db_id, p, sizeof(uint64_t)); p += sizeof(uint64_t);
       int32_t name_len;
-      std::memcpy(&name_len, p, sizeof(int32_t));
-      p += sizeof(int32_t);
+      std::memcpy(&name_len, p, sizeof(int32_t)); p += sizeof(int32_t);
       std::string db_name(p, name_len);
 
-      uint64_t dummy = 0;
-      ddl_operator_.create_database(db_name.c_str(), dummy);
+      // Directly populate SchemaService (don't go through ddl_operator_ to avoid re-writing to tablet)
+      auto &schema = share::schema::ObSchemaService::instance();
+      uint64_t tmp_id = 0;
+      schema.create_database(db_name.c_str(), tmp_id);
       recovered++;
       LOG_INFO("SystemTablet recovery: %s (id=%lu)", db_name.c_str(), db_id);
     }
-    LOG_INFO("SystemTablet scan: recovered %d databases from LSM", recovered);
+    LOG_INFO("SystemTablet scan: recovered %d databases from __all_database LSM", recovered);
   }
 
   LOG_INFO("ObDDLService: PALF CLOG + SystemTablet recovery completed");
