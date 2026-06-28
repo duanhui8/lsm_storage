@@ -7,7 +7,7 @@ miniob is licensed under Mulan PSL v2. */
 #include "event/sql_event.h"
 #include "session/session.h"
 #include "sql/stmt/create_table_stmt.h"
-#include "storage/schema/ob_schema_service.h"
+#include "share/schema/ob_schema_service.h"
 
 using namespace oceanbase::share::schema;
 

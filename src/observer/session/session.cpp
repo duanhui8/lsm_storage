@@ -2,7 +2,7 @@
 miniob is licensed under Mulan PSL v2. */
 
 #include "session/session.h"
-#include "storage/schema/ob_schema_service.h"
+#include "share/schema/ob_schema_service.h"
 
 Session &Session::default_session()
 {

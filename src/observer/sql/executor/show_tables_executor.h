@@ -6,7 +6,7 @@ miniob is licensed under Mulan PSL v2. */
 #include "common/sys/rc.h"
 #include "sql/executor/sql_result.h"
 #include "sql/operator/string_list_physical_operator.h"
-#include "storage/schema/ob_schema_service.h"
+#include "share/schema/ob_schema_service.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "session/session.h"

@@ -251,3 +251,21 @@ Finish dump configuration
 
 [2026-06-28 13:48:42.925380 pid:25425 tid:7ffff702e7c0 ctx:0 INFO: init_global_objects@init.cpp:145] >> Global objects initialized successfully
 [2026-06-28 13:48:42.925418 pid:25425 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:208] >> Successfully init utility
+[2026-06-28 13:51:59.697991 pid:28295 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:193] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 13:51:59.698197 pid:28295 tid:7ffff702e7c0 ctx:0 INFO: init_global_objects@init.cpp:145] >> Global objects initialized successfully
+[2026-06-28 13:51:59.698223 pid:28295 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:208] >> Successfully init utility
+[2026-06-28 13:52:52.268722 pid:28928 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:193] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-28 13:52:52.268869 pid:28928 tid:7ffff702e7c0 ctx:0 INFO: init_global_objects@init.cpp:145] >> Global objects initialized successfully
+[2026-06-28 13:52:52.268897 pid:28928 tid:7ffff702e7c0 ctx:0 INFO: init@init.cpp:208] >> Successfully init utility
+[2026-06-28 13:52:59.181266 pid:28928 tid:7ffff702e7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-28 13:53:49.583427 pid:28928 tid:7ffff702e7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

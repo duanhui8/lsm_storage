@@ -26,7 +26,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "session/session_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
-#include "storage/schema/ob_schema_service.h"
+#include "share/schema/ob_schema_service.h"
 
 using namespace common;
 
