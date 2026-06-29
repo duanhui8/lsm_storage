@@ -154,7 +154,9 @@ int init_global_objects(ProcessParam *process_param, Ini &properties)
     oceanbase::share::ObInnerTableSchema::all_core_table_schema(ts);
     ts.set_database_id(schema.get_database_schema("sys")->get_database_id());
     schema.create_table(ts);
-    LOG_INFO("Registered inner table: %s (table_id=%lu)", ts.get_table_name(), ts.get_table_id());
+    // Verify registration
+    auto *verify = schema.get_table_schema("__all_database");
+    LOG_INFO("Registered inner table: %s, verify=%p", ts.get_table_name(), (void*)verify);
   }
 
   // Set default session to sys

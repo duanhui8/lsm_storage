@@ -43,6 +43,10 @@
 #include "sql/operator/calc_physical_operator.h"
 #include "sql/stmt/select_stmt.h"
 #include "sql/stmt/stmt.h"
+#include "rootserver/ob_ddl_service.h"
+#include "storage/tablet/ob_tablet.h"
+#include "storage/tablet/ob_tablet_table_store.h"
+#include "sql/operator/string_list_physical_operator.h"
 
 using namespace common;
 
@@ -68,8 +72,45 @@ RC ExecuteStage::handle_request(SQLStageEvent *sql_event)
   }
 
   SessionEvent *session_event = sql_event->session_event();
+  SqlResult *sql_result = session_event->sql_result();
 
   Stmt *stmt = sql_event->stmt();
+  if (stmt != nullptr && stmt->type() == StmtType::SELECT) {
+    // Check if this is SELECT * FROM __all_database (direct system tablet scan)
+    auto *sel = static_cast<SelectStmt *>(stmt);
+    const auto &names = sel->table_names();
+    if (!names.empty() && names[0] == "__all_database") {
+      auto &ddl = oceanbase::rootserver::ObDDLService::instance();
+      auto *tablet = ddl.get_system_tablet();
+      if (tablet != nullptr) {
+        auto *store = tablet->get_table_store();
+        oceanbase::storage::ObStoreCtx ctx; ctx.tx_id_ = 1;
+        ctx.snapshot_version_ = oceanbase::storage::OB_INVALID_VERSION;
+        std::vector<oceanbase::storage::ObStoreRow> rows;
+        oceanbase::storage::ObStoreRowkey start_key("", 0);
+        oceanbase::storage::ObStoreRowkey end_key("\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 8);
+        store->scan(ctx, start_key, false, end_key, false, rows);
+
+        TupleSchema schema;
+        schema.append_cell(TupleCellSpec("__all_database", "database_id", "database_id"));
+        schema.append_cell(TupleCellSpec("__all_database", "database_name", "database_name"));
+        sql_result->set_tuple_schema(schema);
+
+        auto oper = new StringListPhysicalOperator;
+        for (auto &row : rows) {
+          if (row.is_deleted_ || row.row_value_.empty()) continue;
+          const char *p = row.row_value_.data();
+          uint64_t db_id; std::memcpy(&db_id, p, 8); p += 8;
+          int32_t name_len; std::memcpy(&name_len, p, 4); p += 4;
+          std::string db_name(p, name_len);
+          oper->append({std::to_string(db_id), db_name});
+        }
+        sql_result->set_operator(unique_ptr<PhysicalOperator>(oper));
+        return RC::SUCCESS;
+      }
+    }
+  }
+
   if (stmt != nullptr) {
     // ★ DDL 路径：直接执行命令
     CommandExecutor command_executor;
@@ -123,6 +164,14 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent *sql_event)
   // SqlResult 是"查询结果的容器 + 执行驱动器"
   // 调用方后续通过 sql_result->open() → next_tuple() → close() 来拉取数据
   SqlResult *sql_result = sql_event->session_event()->sql_result();
+
+  // Set tuple schema from the operator tree
+  TupleSchema schema;
+  physical_operator->tuple_schema(schema);
+  if (schema.cell_num() > 0) {
+    sql_result->set_tuple_schema(schema);
+  }
+
   sql_result->set_operator(std::move(physical_operator));
   return rc;
 }

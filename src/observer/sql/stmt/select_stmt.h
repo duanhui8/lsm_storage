@@ -76,6 +76,7 @@ public:
 
 public:
   const vector<void *> &tables() const { return tables_; }
+  const vector<std::string> &table_names() const { return table_names_; }
   FilterStmt            *filter_stmt() const { return filter_stmt_; }
 
   /**
@@ -92,7 +93,8 @@ public:
 
 private:
   vector<unique_ptr<Expression>> query_expressions_;  ///< SELECT 列表达式
-  vector<void *>                tables_;              ///< FROM table pointers
+  vector<void *>                tables_;
+  vector<std::string>            table_names_;         ///< FROM table names
   FilterStmt                    *filter_stmt_ = nullptr; ///< WHERE 过滤条件
   vector<unique_ptr<Expression>> group_by_;            ///< GROUP BY 表达式
 };

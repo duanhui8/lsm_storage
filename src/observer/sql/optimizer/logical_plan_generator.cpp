@@ -178,11 +178,16 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
 
   // ★ 步骤1b: 为每张表创建 TableGet 节点，多表时用 Join 连接
   const auto &tables = select_stmt->tables();
-  if (tables.empty()) { return RC::SUCCESS; }  // no tables in stub — just return
+  if (tables.empty()) { return RC::SUCCESS; }
+  int idx = 0;
   for (auto *table : tables) {
-    unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_ONLY));
+    auto *tgl = new TableGetLogicalOperator(table, ReadWriteMode::READ_ONLY);
+    if (idx < static_cast<int>(select_stmt->table_names().size()))
+      tgl->set_table_name(select_stmt->table_names()[idx]);
+    unique_ptr<LogicalOperator> table_get_oper(tgl);
     if (table_oper == nullptr) {
       table_oper = std::move(table_get_oper);
+      idx++;
     } else {
       JoinLogicalOperator *join_oper = new JoinLogicalOperator;   // ★ 后续表通过 Join 连接
       join_oper->add_child(std::move(table_oper));

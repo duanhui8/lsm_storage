@@ -204,11 +204,10 @@ RC PhysicalPlanGenerator::create_vec(LogicalOperator &logical_operator, unique_p
  */
 RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, unique_ptr<PhysicalOperator> &oper, Session*)
 {
-  // Index scan not yet implemented — always use table scan
   auto *table = table_get_oper.table();
   auto table_scan_oper = new TableScanPhysicalOperator(table, ReadWriteMode::READ_WRITE);
+  table_scan_oper->set_table_name(table_get_oper.get_table_name());
   oper = unique_ptr<PhysicalOperator>(table_scan_oper);
-  LOG_TRACE("use table scan");
   return RC::SUCCESS;
 }
 

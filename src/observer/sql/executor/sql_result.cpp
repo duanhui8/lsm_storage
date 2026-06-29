@@ -62,9 +62,13 @@ RC SqlResult::open()
     return RC::INVALID_ARGUMENT;
   }
 
+  // Set tuple schema from the operator
+  RC rc = operator_->tuple_schema(tuple_schema_);
+  LOG_INFO("SqlResult::open: operator_->tuple_schema returned %d, cell_num=%d", rc, tuple_schema_.cell_num());
+
   Trx *trx = session_->current_trx();
-  trx->start_if_need();         // ★ 懒启动事务
-  return operator_->open(trx);  // ★ 初始化算子树
+  trx->start_if_need();
+  return operator_->open(trx);
 }
 
 /**

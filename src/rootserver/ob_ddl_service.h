@@ -43,8 +43,8 @@ public:
   /** Get singleton */
   static ObDDLService &instance();
 
-  /** Access the log service for external replay registration */
-  logservice::ObLogService *get_log_service() { return log_service_.get(); }
+  /** Access the system tablet for __all_database queries */
+  storage::ObTablet *get_system_tablet() { return system_tablet_; }
 
 private:
   static constexpr int64_t DDL_LS_ID = 1;
