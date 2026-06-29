@@ -148,15 +148,22 @@ int init_global_objects(ProcessParam *process_param, Ini &properties)
     ddl.create_database("sys", sys_id);
   }
 
-  // OB 4.4.2: register __all_database inner table schema (bootstrap pattern)
+  // OB 4.4.2: register inner table schemas (bootstrap pattern)
+  // Matches core_table_schema_creators[] iteration in ob_bootstrap.cpp:1042
   {
-    oceanbase::share::schema::ObTableSchema ts;
-    oceanbase::share::ObInnerTableSchema::all_core_table_schema(ts);
-    ts.set_database_id(schema.get_database_schema("sys")->get_database_id());
-    schema.create_table(ts);
-    // Verify registration
-    auto *verify = schema.get_table_schema("__all_database");
-    LOG_INFO("Registered inner table: %s, verify=%p", ts.get_table_name(), (void*)verify);
+    uint64_t sys_db_id = schema.get_database_schema("sys")->get_database_id();
+    auto register_table = [&](auto schema_func) {
+      oceanbase::share::schema::ObTableSchema ts;
+      schema_func(ts);
+      ts.set_database_id(sys_db_id);
+      schema.create_table(ts);
+      LOG_INFO("Registered inner table: %s (tid=%lu)", ts.get_table_name(), ts.get_table_id());
+    };
+    register_table(oceanbase::share::ObInnerTableSchema::all_core_table_schema);
+    register_table(oceanbase::share::ObInnerTableSchema::all_table_schema);
+    register_table(oceanbase::share::ObInnerTableSchema::all_column_schema);
+    register_table(oceanbase::share::ObInnerTableSchema::all_database_schema);
+    register_table(oceanbase::share::ObInnerTableSchema::all_ddl_operation_schema);
   }
 
   // Set default session to sys
