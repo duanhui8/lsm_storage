@@ -114,6 +114,10 @@ RC ProjectPhysicalOperator::close()
  */
 Tuple *ProjectPhysicalOperator::current_tuple()
 {
+  // SELECT * → no expressions, pass through child's tuple directly
+  if (expressions_.empty() && !children_.empty()) {
+    return children_[0]->current_tuple();
+  }
   tuple_.set_tuple(children_[0]->current_tuple());
   return &tuple_;
 }
@@ -129,6 +133,10 @@ Tuple *ProjectPhysicalOperator::current_tuple()
  */
 RC ProjectPhysicalOperator::tuple_schema(TupleSchema &schema) const
 {
+  // If no expressions (SELECT *), delegate to child operator's schema
+  if (expressions_.empty() && !children_.empty()) {
+    return children_[0]->tuple_schema(schema);
+  }
   for (const unique_ptr<Expression> &expression : expressions_) {
     schema.append_cell(expression->name());
   }
