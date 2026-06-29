@@ -27,6 +27,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "share/schema/ob_schema_service.h"
+#include "share/inner_table/ob_inner_table_schema.h"
 #include "rootserver/ob_ddl_service.h"
 
 using namespace common;
@@ -145,6 +146,15 @@ int init_global_objects(ProcessParam *process_param, Ini &properties)
   if (recovered == 0 || schema.get_database_schema("sys") == nullptr) {
     uint64_t sys_id = 0;
     ddl.create_database("sys", sys_id);
+  }
+
+  // OB 4.4.2: register __all_database inner table schema (bootstrap pattern)
+  {
+    oceanbase::share::schema::ObTableSchema ts;
+    oceanbase::share::ObInnerTableSchema::all_core_table_schema(ts);
+    ts.set_database_id(schema.get_database_schema("sys")->get_database_id());
+    schema.create_table(ts);
+    LOG_INFO("Registered inner table: %s (table_id=%lu)", ts.get_table_name(), ts.get_table_id());
   }
 
   // Set default session to sys
