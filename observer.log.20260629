@@ -181,3 +181,40 @@ Finish dump configuration
 [2026-06-29 13:45:45.356919 pid:26948 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:139] >> ObDDLService: PALF CLOG replay completed
 [2026-06-29 13:45:47.520090 pid:26948 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:153] >> Global objects initialized successfully
 [2026-06-29 13:45:47.520171 pid:26948 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:216] >> Successfully init utility
+[2026-06-29 15:36:29.537554 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:194] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-29 15:36:29.545177 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: insert_database@ob_database_sql_service.cpp:50] >> ObDatabaseSqlService: INSERT INTO __all_database (1, sys)
+[2026-06-29 15:36:29.545282 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: log_operation@ob_ddl_sql_service.cpp:55] >> ObDDLSqlService: INSERT INTO __all_ddl_operation (type=4, db=sys)
+[2026-06-29 15:36:30.805986 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:72] >> ObDDLService: bootstrap complete — sys db + 2 inner tables registered
+[2026-06-29 15:36:30.806070 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:77] >> ObDDLService PALF + SystemTablet inited, base_dir=miniob/store
+[2026-06-29 15:36:30.806127 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=0)
+[2026-06-29 15:36:30.806153 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=83)
+[2026-06-29 15:36:30.806161 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=166)
+[2026-06-29 15:36:30.806171 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE test (id=2, lsn=249)
+[2026-06-29 15:36:30.806189 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=333)
+[2026-06-29 15:36:30.806196 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=416)
+[2026-06-29 15:36:30.806211 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=499)
+[2026-06-29 15:36:30.806235 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=582)
+[2026-06-29 15:36:30.806261 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=665)
+[2026-06-29 15:36:30.806275 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=748)
+[2026-06-29 15:36:30.806292 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=831)
+[2026-06-29 15:36:30.806309 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=914)
+[2026-06-29 15:36:30.806326 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: replay@ob_ddl_service.cpp:183] >> CLOG replay: CREATE DATABASE sys (id=1, lsn=997)
+[2026-06-29 15:36:30.806339 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:162] >> ObDDLService: PALF CLOG replay completed
+[2026-06-29 15:36:31.346484 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:146] >> Global objects initialized successfully
+[2026-06-29 15:36:31.346565 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:209] >> Successfully init utility
+[2026-06-29 15:36:53.816192 pid:7992 tid:7ffff702c7c0 ctx:0 ERROR: execute@command_executor.cpp:160] >> unknown command: 1
+[2026-06-29 15:37:08.831972 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-29 15:37:18.245796 pid:7992 tid:7ffff702c7c0 ctx:0 ERROR: execute@command_executor.cpp:160] >> unknown command: 1
+[2026-06-29 15:37:18.245918 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-29 15:37:53.721216 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: create@select_stmt.cpp:19] >> SelectStmt: resolved table __all_database
+[2026-06-29 15:37:56.105763 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: tuple_schema@table_scan_physical_operator.cpp:74] >> TableScan::tuple_schema called, table=__all_database
+[2026-06-29 15:37:56.105928 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: tuple_schema@table_scan_physical_operator.cpp:74] >> TableScan::tuple_schema called, table=__all_database
+[2026-06-29 15:37:56.105965 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: tuple_schema@table_scan_physical_operator.cpp:74] >> TableScan::tuple_schema called, table=__all_database
+[2026-06-29 15:37:56.106001 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: open@sql_result.cpp:67] >> SqlResult::open: operator_->tuple_schema returned 0, cell_num=6
+[2026-06-29 15:37:56.106088 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: open@table_scan_physical_operator.cpp:46] >> TableScan __all_database: 2 rows
+[2026-06-29 15:37:56.106189 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

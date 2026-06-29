@@ -16,12 +16,10 @@ namespace schema {
 
 int ObDDLSqlService::log_operation(ObDDLOperationType op_type, const char *db_name)
 {
-  if (system_tablet_ == nullptr) {
-    LOG_WARN("system_tablet_ is null, cannot log DDL operation");
-    return -1;
-  }
-
-  auto *tablet = static_cast<storage::ObTablet *>(system_tablet_);
+  if (system_tablets_ == nullptr) { LOG_WARN("tablet map null"); return -1; }
+  auto it = system_tablets_->find("__all_ddl_operation");
+  if (it == system_tablets_->end()) { LOG_WARN("__all_ddl_operation tablet not found"); return -1; }
+  auto *tablet = static_cast<storage::ObTablet *>(it->second);
   auto *mt = tablet->get_table_store()->get_active_memtable();
   if (mt == nullptr) return -1;
 

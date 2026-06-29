@@ -16,12 +16,10 @@ namespace schema {
 
 int ObDatabaseSqlService::insert_database(const ObDatabaseSchema &database_schema)
 {
-  if (system_tablet_ == nullptr) {
-    LOG_WARN("system_tablet_ is null, cannot insert __all_database");
-    return -1;
-  }
-
-  auto *tablet = static_cast<storage::ObTablet *>(system_tablet_);
+  if (system_tablets_ == nullptr) { LOG_WARN("tablet map null"); return -1; }
+  auto it = system_tablets_->find("__all_database");
+  if (it == system_tablets_->end()) { LOG_WARN("__all_database tablet not found"); return -1; }
+  auto *tablet = static_cast<storage::ObTablet *>(it->second);
   auto *mt = tablet->get_table_store()->get_active_memtable();
   if (mt == nullptr) return -1;
 
@@ -60,8 +58,8 @@ int ObDatabaseSqlService::update_database(const ObDatabaseSchema &database_schem
 
 int ObDatabaseSqlService::delete_database(const ObDatabaseSchema &database_schema)
 {
-  if (system_tablet_ == nullptr) return -1;
-  auto *tablet = static_cast<storage::ObTablet *>(system_tablet_);
+  if (system_tablets_ == nullptr) return -1;
+  auto it = system_tablets_->find("__all_database"); if (it == system_tablets_->end()) return -1; auto *tablet = static_cast<storage::ObTablet *>(it->second);
   auto *mt = tablet->get_table_store()->get_active_memtable();
   if (mt == nullptr) return -1;
 
@@ -78,8 +76,8 @@ int ObDatabaseSqlService::delete_database(const ObDatabaseSchema &database_schem
 
 int ObDatabaseSqlService::query_database(const char *db_name, ObDatabaseSchema &out_schema)
 {
-  if (system_tablet_ == nullptr) return -1;
-  auto *tablet = static_cast<storage::ObTablet *>(system_tablet_);
+  if (system_tablets_ == nullptr) return -1;
+  auto it = system_tablets_->find("__all_database"); if (it == system_tablets_->end()) return -1; auto *tablet = static_cast<storage::ObTablet *>(it->second);
   auto *store = tablet->get_table_store();
 
   storage::ObStoreCtx ctx; ctx.tx_id_ = 1;
@@ -109,8 +107,8 @@ int ObDatabaseSqlService::query_database(const char *db_name, ObDatabaseSchema &
 
 int ObDatabaseSqlService::get_all_databases(std::vector<std::string> &db_names)
 {
-  if (system_tablet_ == nullptr) return -1;
-  auto *tablet = static_cast<storage::ObTablet *>(system_tablet_);
+  if (system_tablets_ == nullptr) return -1;
+  auto it = system_tablets_->find("__all_database"); if (it == system_tablets_->end()) return -1; auto *tablet = static_cast<storage::ObTablet *>(it->second);
   auto *store = tablet->get_table_store();
 
   storage::ObStoreCtx ctx; ctx.tx_id_ = 1;

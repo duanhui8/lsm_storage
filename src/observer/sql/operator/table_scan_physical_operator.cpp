@@ -20,7 +20,7 @@ RC TableScanPhysicalOperator::open(Trx *)
     // (normally done by optimizer, but our physical plan doesn't set it yet)
 
     auto &ddl = oceanbase::rootserver::ObDDLService::instance();
-    auto *tablet = ddl.get_system_tablet();
+    auto *tablet = ddl.get_system_tablet("__all_database");
     if (tablet == nullptr) return RC::SUCCESS;
 
     auto *store = tablet->get_table_store();

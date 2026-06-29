@@ -36,42 +36,63 @@ int ObDDLService::init(const char *base_dir) {
 
   log_handler_->register_replay_handler(logservice::DDL_LOG_BASE_TYPE, this);
 
-  // Create system tablet for __all_database (LSM: MemTable → SSTable)
-  system_tablet_ = new storage::ObTablet();
-  ret = system_tablet_->init(SYSTEM_TABLET_ID, log_service_.get());
-  if (ret != 0) { LOG_WARN("Failed to init system tablet"); }
+  // OB 4.4.2: create or load inner tablets
+  // Check if CLOG data exists — if yes, tablets already on disk, just load
+  bool need_bootstrap = (::access((base_dir_ + "/clog/1/0").c_str(), F_OK) != 0);
+  LOG_INFO("ObDDLService: need_bootstrap=%d (CLOG exists=%d)", need_bootstrap, !need_bootstrap);
 
-  // Wire __all_database tablet to ObDatabaseSqlService (via ObDDLOperator)
-  ddl_operator_.set_system_tablet(system_tablet_);
+  auto open_inner_tablet = [&](const char *name, uint64_t tablet_id) -> storage::ObTablet * {
+    auto *t = new storage::ObTablet();
+    if (t->init(static_cast<int64_t>(tablet_id), log_service_.get()) != 0) {
+      delete t; return nullptr;
+    }
+    system_tablets_[name] = t;
+    return t;
+  };
 
-  // Register memtable as PALF replay handler for TABLET_OP
-  if (system_tablet_ && system_tablet_->get_log_handler()) {
-    auto *mt = system_tablet_->get_table_store()->get_active_memtable();
-    if (mt) system_tablet_->get_log_handler()->register_replay_handler(
-        logservice::TABLET_OP_LOG_BASE_TYPE, mt);
+  open_inner_tablet("__all_database",      share::OB_ALL_DATABASE_TID);
+  open_inner_tablet("__all_ddl_operation", share::OB_ALL_DDL_OPERATION_TID);
+  open_inner_tablet("__all_table",         share::OB_ALL_TABLE_TID);
+  open_inner_tablet("__all_column",        share::OB_ALL_COLUMN_TID);
+  open_inner_tablet("__all_core_table",    2);
+
+  // Wire tablet map to ObDDLOperator services
+  ddl_operator_.set_system_tablets(&system_tablets_);
+  need_bootstrap_ = need_bootstrap;
+
+  // Register replay handlers for all inner tablets
+  for (auto &pair : system_tablets_) {
+    auto *t = pair.second;
+    if (t && t->get_log_handler()) {
+      auto *mt = t->get_table_store()->get_active_memtable();
+      if (mt) t->get_log_handler()->register_replay_handler(
+          logservice::TABLET_OP_LOG_BASE_TYPE, mt);
+    }
   }
 
-  // OB 4.4.2 bootstrap (ob_bootstrap.cpp:1042): create sys + register inner table schemas
-  auto &schema = share::schema::ObSchemaService::instance();
-  uint64_t sys_id = 0;
-  ddl_operator_.create_database("sys", sys_id);
-  uint64_t sys_db_id = schema.get_database_schema("sys")->get_database_id();
+  // OB 4.4.2 bootstrap (ob_bootstrap.cpp:1042): only on first run
+  if (need_bootstrap_) {
+    auto &schema = share::schema::ObSchemaService::instance();
+    uint64_t sys_id = 0;
+    ddl_operator_.create_database("sys", sys_id);
+    uint64_t sys_db_id = schema.get_database_schema("sys")->get_database_id();
 
-  for (int i = 0; share::core_table_schema_creators[i] != NULL; i++) {
-    share::schema::ObTableSchema ts;
-    share::core_table_schema_creators[i](ts);
-    ts.set_database_id(sys_db_id);
-    schema.create_table(ts);
+    for (int i = 0; share::core_table_schema_creators[i] != NULL; i++) {
+      share::schema::ObTableSchema ts;
+      share::core_table_schema_creators[i](ts);
+      ts.set_database_id(sys_db_id);
+      schema.create_table(ts);
+    }
+    for (int i = 0; share::sys_table_schema_creators[i] != NULL; i++) {
+      share::schema::ObTableSchema ts;
+      share::sys_table_schema_creators[i](ts);
+      ts.set_database_id(sys_db_id);
+      schema.create_table(ts);
+    }
+    LOG_INFO("ObDDLService: bootstrap complete");
+  } else {
+    LOG_INFO("ObDDLService: loading existing tablets (bootstrap skipped)");
   }
-  for (int i = 0; share::sys_table_schema_creators[i] != NULL; i++) {
-    share::schema::ObTableSchema ts;
-    share::sys_table_schema_creators[i](ts);
-    ts.set_database_id(sys_db_id);
-    schema.create_table(ts);
-  }
-  LOG_INFO("ObDDLService: bootstrap complete — sys db + %d inner tables registered",
-           (int)(sizeof(share::core_table_schema_creators)/sizeof(share::core_table_schema_creators[0]) +
-                 sizeof(share::sys_table_schema_creators)/sizeof(share::sys_table_schema_creators[0]) - 4));
 
   is_inited_ = true;
   LOG_INFO("ObDDLService PALF + SystemTablet inited, base_dir=%s", base_dir);
@@ -194,6 +215,12 @@ int ObDDLService::replay(const void *buffer, int64_t nbytes,
     LOG_INFO("CLOG replay: CREATE TABLE %s (id=%lu, lsn=%lu)", name, tid, lsn.val_);
   }
   return 0;
+}
+
+storage::ObTablet *ObDDLService::get_system_tablet(const char *table_name)
+{
+  auto it = system_tablets_.find(table_name);
+  return (it != system_tablets_.end()) ? it->second : nullptr;
 }
 
 }  // namespace rootserver

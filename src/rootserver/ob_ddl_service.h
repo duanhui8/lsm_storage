@@ -71,19 +71,19 @@ public:
   /** Get singleton */
   static ObDDLService &instance();
 
-  /** Access the system tablet for __all_database queries */
-  storage::ObTablet *get_system_tablet() { return system_tablet_; }
+  /** Get the tablet for a system table by name. OB: each inner table has its own tablet. */
+  storage::ObTablet *get_system_tablet(const char *table_name);
 
 private:
   static constexpr int64_t DDL_LS_ID = 1;
-  static constexpr int64_t SYSTEM_TABLET_ID = 0;
 
   ObDDLOperator ddl_operator_;
   std::unique_ptr<logservice::ObLogService> log_service_;
   logservice::ObLogHandler *log_handler_ = nullptr;
   storage::ObStorageLogger slog_logger_;
-  storage::ObTablet *system_tablet_ = nullptr;  // __all_database system tablet (LSM)
+  std::unordered_map<std::string, storage::ObTablet *> system_tablets_;
   std::string base_dir_;
+  bool need_bootstrap_ = false;  // true=first run, create sys + register schemas
   bool is_inited_ = false;
 };
 

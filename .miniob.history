@@ -88,5 +88,7 @@ drop database test;
 create database test;
 ### 2026-06-29 13:33:10.339
 show databases;
-### 2026-06-29 13:45:50.068
+### 2026-06-29 15:37:13.502
+select * from __all_databases;
+### 2026-06-29 15:37:51.885
 select * from __all_database;

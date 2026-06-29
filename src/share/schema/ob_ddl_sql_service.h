@@ -10,6 +10,8 @@ Refer to: /opt/oceanbase/src/share/schema/ob_ddl_sql_service.h */
 #pragma once
 
 #include <cstdint>
+#include <unordered_map>
+#include <string>
 #include "share/inner_table/ob_inner_table_schema_constants.h"
 
 namespace oceanbase {
@@ -35,10 +37,10 @@ public:
   int log_operation(ObDDLOperationType op_type, const char *db_name);
 
   /** Set the system tablet for direct write */
-  void set_system_tablet(void *tablet) { system_tablet_ = tablet; }
+  void set_system_tablets(std::unordered_map<std::string, void *> *tablets) { system_tablets_ = tablets; }
 
 private:
-  void *system_tablet_ = nullptr;
+  std::unordered_map<std::string, void *> *system_tablets_ = nullptr;
 };
 
 }  // namespace schema

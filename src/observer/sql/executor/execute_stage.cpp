@@ -81,7 +81,7 @@ RC ExecuteStage::handle_request(SQLStageEvent *sql_event)
     const auto &names = sel->table_names();
     if (!names.empty() && names[0] == "__all_database") {
       auto &ddl = oceanbase::rootserver::ObDDLService::instance();
-      auto *tablet = ddl.get_system_tablet();
+      auto *tablet = ddl.get_system_tablet("__all_database");
       if (tablet != nullptr) {
         auto *store = tablet->get_table_store();
         oceanbase::storage::ObStoreCtx ctx; ctx.tx_id_ = 1;

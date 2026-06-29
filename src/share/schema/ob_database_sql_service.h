@@ -26,6 +26,7 @@ Refer to: /opt/oceanbase/src/share/schema/ob_database_sql_service.h (314 行)
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "share/schema/ob_database_schema.h"
 #include "share/inner_table/ob_inner_table_schema_constants.h"
 
@@ -62,11 +63,11 @@ public:
   /** get_all_databases — SELECT all databases */
   int get_all_databases(std::vector<std::string> &db_names);
 
-  /** Get the system tablet pointer for direct write */
-  void set_system_tablet(void *tablet) { system_tablet_ = tablet; }
+  /** Set the tablet map — each inner table routes to its own tablet */
+  void set_system_tablets(std::unordered_map<std::string, void *> *tablets) { system_tablets_ = tablets; }
 
 private:
-  void *system_tablet_ = nullptr;  // storage::ObTablet* for __all_database
+  std::unordered_map<std::string, void *> *system_tablets_ = nullptr;
 };
 
 }  // namespace schema
