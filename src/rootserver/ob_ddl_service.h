@@ -73,6 +73,7 @@ public:
 
   /** Get the tablet for a system table by name. OB: each inner table has its own tablet. */
   storage::ObTablet *get_system_tablet(const char *table_name);
+  logservice::ObLogHandler *get_log_handler() { return log_handler_; }
 
 private:
   static constexpr int64_t DDL_LS_ID = 1;

@@ -27,6 +27,7 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_operator.h
 #include "share/schema/ob_ddl_sql_service.h"
 
 namespace oceanbase { namespace storage { class ObTablet; } }
+namespace oceanbase { namespace logservice { class ObLogHandler; } }
 
 namespace oceanbase { namespace rootserver {
 class ObDDLOperator {
@@ -42,9 +43,11 @@ public:
     db_sql_service_.set_system_tablets(reinterpret_cast<std::unordered_map<std::string, void *> *>(tablets));
     ddl_sql_service_.set_system_tablets(reinterpret_cast<std::unordered_map<std::string, void *> *>(tablets));
   }
+  void set_log_handler(logservice::ObLogHandler *handler) { log_handler_ = handler; }
 
 private:
   share::schema::ObDatabaseSqlService db_sql_service_;
   share::schema::ObDDLSqlService       ddl_sql_service_;
+  logservice::ObLogHandler            *log_handler_ = nullptr;
 };
 }}

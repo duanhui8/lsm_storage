@@ -218,3 +218,17 @@ Finish dump configuration
 [2026-06-29 15:37:56.106001 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: open@sql_result.cpp:67] >> SqlResult::open: operator_->tuple_schema returned 0, cell_num=6
 [2026-06-29 15:37:56.106088 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: open@table_scan_physical_operator.cpp:46] >> TableScan __all_database: 2 rows
 [2026-06-29 15:37:56.106189 pid:7992 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS
+[2026-06-29 15:57:44.513436 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:194] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2026-06-29 15:57:44.517932 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:42] >> ObDDLService: need_bootstrap=0 (CLOG exists=1)
+[2026-06-29 15:57:44.532673 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:94] >> ObDDLService: loading existing tablets (bootstrap skipped)
+[2026-06-29 15:57:44.532727 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: init@ob_ddl_service.cpp:98] >> ObDDLService PALF + SystemTablet inited, base_dir=miniob/store
+[2026-06-29 15:57:44.532744 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: recover_schema@ob_ddl_service.cpp:183] >> ObDDLService: PALF CLOG replay completed
+[2026-06-29 15:57:44.532764 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: init_global_objects@init.cpp:146] >> Global objects initialized successfully
+[2026-06-29 15:57:44.532778 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: init@init.cpp:209] >> Successfully init utility
+[2026-06-29 15:58:10.703366 pid:25119 tid:7ffff702c7c0 ctx:0 ERROR: execute@command_executor.cpp:160] >> unknown command: 1
+[2026-06-29 15:58:10.703552 pid:25119 tid:7ffff702c7c0 ctx:0 INFO: handle_event@sql_task_handler.cpp:105] >> write result return SUCCESS

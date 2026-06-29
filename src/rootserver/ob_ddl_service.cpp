@@ -41,9 +41,11 @@ int ObDDLService::init(const char *base_dir) {
   bool need_bootstrap = (::access((base_dir_ + "/clog/1/0").c_str(), F_OK) != 0);
   LOG_INFO("ObDDLService: need_bootstrap=%d (CLOG exists=%d)", need_bootstrap, !need_bootstrap);
 
+  // OB 4.4.2: all inner tablets share SYS_LS (ls_id=1), one CLOG stream
   auto open_inner_tablet = [&](const char *name, uint64_t tablet_id) -> storage::ObTablet * {
     auto *t = new storage::ObTablet();
-    if (t->init(static_cast<int64_t>(tablet_id), log_service_.get()) != 0) {
+    // Pass log_service=nullptr: tablets share SYS_LS via register_replay_handler below
+    if (t->init(static_cast<int64_t>(tablet_id), nullptr) != 0) {
       delete t; return nullptr;
     }
     system_tablets_[name] = t;
@@ -58,15 +60,18 @@ int ObDDLService::init(const char *base_dir) {
 
   // Wire tablet map to ObDDLOperator services
   ddl_operator_.set_system_tablets(&system_tablets_);
+  ddl_operator_.set_log_handler(log_handler_);
   need_bootstrap_ = need_bootstrap;
 
-  // Register replay handlers for all inner tablets
-  for (auto &pair : system_tablets_) {
-    auto *t = pair.second;
-    if (t && t->get_log_handler()) {
-      auto *mt = t->get_table_store()->get_active_memtable();
-      if (mt) t->get_log_handler()->register_replay_handler(
-          logservice::TABLET_OP_LOG_BASE_TYPE, mt);
+  // Register all inner tablet MemTables with SYS_LS log handler for PALF replay
+  if (log_handler_ != nullptr) {
+    for (auto &pair : system_tablets_) {
+      auto *t = pair.second;
+      if (t) {
+        auto *mt = t->get_table_store()->get_active_memtable();
+        if (mt) log_handler_->register_replay_handler(
+            logservice::TABLET_OP_LOG_BASE_TYPE, mt);
+      }
     }
   }
 
@@ -91,7 +96,25 @@ int ObDDLService::init(const char *base_dir) {
     }
     LOG_INFO("ObDDLService: bootstrap complete");
   } else {
+    // Restart: reload schemas from system tablets (they were persisted in CLOG + MemTable)
     LOG_INFO("ObDDLService: loading existing tablets (bootstrap skipped)");
+    auto &schema = share::schema::ObSchemaService::instance();
+    uint64_t sys_db_id = 0;
+    if (schema.get_database_schema("sys") != nullptr) {
+      sys_db_id = schema.get_database_schema("sys")->get_database_id();
+    }
+    for (int i = 0; share::core_table_schema_creators[i] != NULL; i++) {
+      share::schema::ObTableSchema ts;
+      share::core_table_schema_creators[i](ts);
+      ts.set_database_id(sys_db_id);
+      schema.create_table(ts);
+    }
+    for (int i = 0; share::sys_table_schema_creators[i] != NULL; i++) {
+      share::schema::ObTableSchema ts;
+      share::sys_table_schema_creators[i](ts);
+      ts.set_database_id(sys_db_id);
+      schema.create_table(ts);
+    }
   }
 
   is_inited_ = true;
@@ -175,12 +198,37 @@ int ObDDLService::recover_schema()
 {
   if (!is_inited_ || log_service_ == nullptr) return 0;
 
-  // OB 4.4.2: PALF CLOG replay restores system tablet MemTable state.
-  // SchemaService is rebuilt from the DDL replay handler (no extra scan needed).
+  // PALF CLOG replay for DDL entries
   int ret = log_service_->replay_ls(DDL_LS_ID);
   if (ret != 0) { LOG_WARN("ObDDLService: PALF replay returned %d", ret); }
 
-  LOG_INFO("ObDDLService: PALF CLOG replay completed");
+  // OB 4.4.2: all inner tablets in SYS_LS — replay one CLOG stream
+
+  // Rebuild SchemaService from __all_database tablet (now has replayed data)
+  auto *db_tablet = get_system_tablet("__all_database");
+  if (db_tablet != nullptr) {
+    auto *store = db_tablet->get_table_store();
+    storage::ObStoreCtx ctx; ctx.tx_id_ = 1;
+    ctx.snapshot_version_ = storage::OB_INVALID_VERSION;
+    std::vector<storage::ObStoreRow> rows;
+    storage::ObStoreRowkey start_key("", 0);
+    storage::ObStoreRowkey end_key("\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 8);
+    store->scan(ctx, start_key, false, end_key, false, rows);
+
+    auto &schema = share::schema::ObSchemaService::instance();
+    for (auto &row : rows) {
+      if (row.is_deleted_ || row.row_value_.empty()) continue;
+      const char *p = row.row_value_.data();
+      uint64_t db_id; std::memcpy(&db_id, p, 8); p += 8;
+      int32_t name_len; std::memcpy(&name_len, p, 4); p += 4;
+      std::string db_name(p, name_len);
+      uint64_t tmp = 0;
+      schema.create_database(db_name.c_str(), tmp);
+      LOG_INFO("recover: %s (id=%lu) from __all_database tablet", db_name.c_str(), db_id);
+    }
+  }
+
+  LOG_INFO("ObDDLService: recovery completed");
   return 0;
 }
 

@@ -5,6 +5,8 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_operator.cpp */
 #include "rootserver/ob_ddl_operator.h"
 #include "share/schema/ob_schema_service.h"
 #include "share/inner_table/ob_inner_table_schema_constants.h"
+#include "storage/logservice/ob_log_handler.h"
+#include "storage/logservice/palf/lsn.h"
 
 namespace oceanbase { namespace rootserver {
 int ObDDLOperator::create_database(const char *db_name, uint64_t &database_id) {
@@ -16,6 +18,21 @@ int ObDDLOperator::create_database(const char *db_name, uint64_t &database_id) {
   // Allocate ID via schema service
   int ret = schema.create_database(db_name, database_id);
   if (ret != 0) return ret;
+
+  // OB 4.4.2: CLOG (TABLET_OP) before MemTable write
+  if (log_handler_ != nullptr) {
+    int64_t name_len = strlen(db_name);
+    int64_t row_size = sizeof(uint64_t) + sizeof(int32_t) + name_len;
+    char *row_buf = static_cast<char *>(std::malloc(row_size));
+    char *rp = row_buf;
+    std::memcpy(rp, &database_id, sizeof(uint64_t)); rp += sizeof(uint64_t);
+    int32_t nl32 = static_cast<int32_t>(name_len);
+    std::memcpy(rp, &nl32, sizeof(int32_t)); rp += sizeof(int32_t);
+    std::memcpy(rp, db_name, name_len);
+    palf::LSN lsn; int64_t scn = 0;
+    log_handler_->append(row_buf, row_size, logservice::TABLET_OP_LOG_BASE_TYPE, lsn, scn);
+    std::free(row_buf);
+  }
 
   // OB 4.4.2: INSERT INTO __all_database
   share::schema::ObDatabaseSchema db_schema;
