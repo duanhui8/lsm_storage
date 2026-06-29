@@ -12,30 +12,36 @@ namespace oceanbase {
 namespace share {
 
 /**
- * ObInnerTableSchema — registers inner table schemas at startup.
+ * ObInnerTableSchema — inner table schema definitions.
+ * Each static method defines one system table.
  * From OB 4.4.2 ob_inner_table_schema.h:342-3660.
- *
- * Each static method defines the schema for one system table.
- * Called during bootstrap to populate ObSchemaService.
  */
 class ObInnerTableSchema {
 public:
   ObInnerTableSchema() = delete;
 
-  /** __all_core_table (TID=2) — KV metadata table */
   static int all_core_table_schema(schema::ObTableSchema &table_schema);
-
-  /** __all_table (TID=500001) */
   static int all_table_schema(schema::ObTableSchema &table_schema);
-
-  /** __all_column (TID=500003) */
   static int all_column_schema(schema::ObTableSchema &table_schema);
-
-  /** __all_database (TID=104) */
-  static int all_database_schema(schema::ObTableSchema &table_schema);
-
-  /** __all_ddl_operation (TID=5) */
   static int all_ddl_operation_schema(schema::ObTableSchema &table_schema);
+  static int all_database_schema(schema::ObTableSchema &table_schema);
+};
+
+// OB 4.4.2 ob_inner_table_schema.h:3663
+typedef int (*schema_create_func)(schema::ObTableSchema &table_schema);
+
+// OB 4.4.2 ob_inner_table_schema.h:3669
+const schema_create_func core_table_schema_creators[] = {
+  ObInnerTableSchema::all_table_schema,
+  ObInnerTableSchema::all_column_schema,
+  ObInnerTableSchema::all_ddl_operation_schema,
+  NULL,
+};
+
+// OB 4.4.2 ob_inner_table_schema.h:3675
+const schema_create_func sys_table_schema_creators[] = {
+  ObInnerTableSchema::all_database_schema,
+  NULL,
 };
 
 }  // namespace share

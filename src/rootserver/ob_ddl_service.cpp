@@ -4,6 +4,7 @@ Refer to: /opt/oceanbase/src/rootserver/ob_ddl_service.cpp */
 
 #include "rootserver/ob_ddl_service.h"
 #include "share/schema/ob_schema_service.h"
+#include "share/inner_table/ob_inner_table_schema.h"
 #include "storage/logservice/ob_log_base_header.h"
 #include "storage/logservice/palf/palf_handle.h"
 #include "common/log/log.h"
@@ -49,6 +50,28 @@ int ObDDLService::init(const char *base_dir) {
     if (mt) system_tablet_->get_log_handler()->register_replay_handler(
         logservice::TABLET_OP_LOG_BASE_TYPE, mt);
   }
+
+  // OB 4.4.2 bootstrap (ob_bootstrap.cpp:1042): create sys + register inner table schemas
+  auto &schema = share::schema::ObSchemaService::instance();
+  uint64_t sys_id = 0;
+  ddl_operator_.create_database("sys", sys_id);
+  uint64_t sys_db_id = schema.get_database_schema("sys")->get_database_id();
+
+  for (int i = 0; share::core_table_schema_creators[i] != NULL; i++) {
+    share::schema::ObTableSchema ts;
+    share::core_table_schema_creators[i](ts);
+    ts.set_database_id(sys_db_id);
+    schema.create_table(ts);
+  }
+  for (int i = 0; share::sys_table_schema_creators[i] != NULL; i++) {
+    share::schema::ObTableSchema ts;
+    share::sys_table_schema_creators[i](ts);
+    ts.set_database_id(sys_db_id);
+    schema.create_table(ts);
+  }
+  LOG_INFO("ObDDLService: bootstrap complete — sys db + %d inner tables registered",
+           (int)(sizeof(share::core_table_schema_creators)/sizeof(share::core_table_schema_creators[0]) +
+                 sizeof(share::sys_table_schema_creators)/sizeof(share::sys_table_schema_creators[0]) - 4));
 
   is_inited_ = true;
   LOG_INFO("ObDDLService PALF + SystemTablet inited, base_dir=%s", base_dir);

@@ -27,7 +27,6 @@ See the Mulan PSL v2 for more details. */
 #include "session/session_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "share/schema/ob_schema_service.h"
-#include "share/inner_table/ob_inner_table_schema.h"
 #include "rootserver/ob_ddl_service.h"
 
 using namespace common;
@@ -139,32 +138,7 @@ int init_global_objects(ProcessParam *process_param, Ini &properties)
   // Init DDL Service + CLOG recovery
   auto &ddl = oceanbase::rootserver::ObDDLService::instance();
   ddl.init("miniob/store");
-  int recovered = ddl.recover_schema();
-
-  // Create sys database if not already present (from recovery)
-  auto &schema = oceanbase::share::schema::ObSchemaService::instance();
-  if (recovered == 0 || schema.get_database_schema("sys") == nullptr) {
-    uint64_t sys_id = 0;
-    ddl.create_database("sys", sys_id);
-  }
-
-  // OB 4.4.2: register inner table schemas (bootstrap pattern)
-  // Matches core_table_schema_creators[] iteration in ob_bootstrap.cpp:1042
-  {
-    uint64_t sys_db_id = schema.get_database_schema("sys")->get_database_id();
-    auto register_table = [&](auto schema_func) {
-      oceanbase::share::schema::ObTableSchema ts;
-      schema_func(ts);
-      ts.set_database_id(sys_db_id);
-      schema.create_table(ts);
-      LOG_INFO("Registered inner table: %s (tid=%lu)", ts.get_table_name(), ts.get_table_id());
-    };
-    register_table(oceanbase::share::ObInnerTableSchema::all_core_table_schema);
-    register_table(oceanbase::share::ObInnerTableSchema::all_table_schema);
-    register_table(oceanbase::share::ObInnerTableSchema::all_column_schema);
-    register_table(oceanbase::share::ObInnerTableSchema::all_database_schema);
-    register_table(oceanbase::share::ObInnerTableSchema::all_ddl_operation_schema);
-  }
+  ddl.recover_schema();
 
   // Set default session to sys
   Session::default_session().set_current_db("sys");
