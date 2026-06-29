@@ -1,7 +1,27 @@
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
-Refer to: /opt/oceanbase/src/share/schema/ob_database_sql_service.h */
+Refer to: /opt/oceanbase/src/share/schema/ob_database_sql_service.h (314 行)
+           /opt/oceanbase/src/share/schema/ob_database_sql_service.cpp
 
+ * ============================================================================
+ * ObDatabaseSqlService — __all_database 系统表的 DML 操作（对应 OB 4.4.2 同名文件）
+ *
+ * OB 4.4.2 机制:
+ *   __all_database 是一个真实的系统表（SYSTEM_TABLE, TABLE_LOAD_TYPE_IN_DISK），
+ *   存储在 SYS_LS 的 Tablet 上，有完整的 MemTable + SSTable。
+ *   通过 MySQL SQL 执行 INSERT/UPDATE/DELETE:
+ *     INSERT INTO __all_database (tenant_id, database_id, database_name, ...) VALUES (...)
+ *
+ * MiniOB 实现:
+ *   系统 Tablet (tablet_id=0) 作为 __all_database 的物理存储，
+ *   直接写入 MemTable (LSM 路径)，不经过 SQL 层。
+ *
+ * 对应 OB 4.4.2 的位置:
+ *   - ob_schema_service.h:786 — forward declaration
+ *   - ob_schema_service_sql_impl.h:1342 — database_service_ 成员
+ *   - ob_database_sql_service.cpp:29 — insert_database() 实现
+ * ============================================================================
+ */
 #pragma once
 
 #include <string>

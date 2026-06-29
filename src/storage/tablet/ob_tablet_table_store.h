@@ -2,6 +2,11 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase4.4.2/src/storage/tablet/ob_tablet_table_store.h */
 
+/* ========== ObTabletTableStore — Tablet 内表存储(对应 OB 4.4.2 storage/tablet/ob_tablet_table_store.h)
+ * OB 4.4.2: 管理 Tablet 的所有 MemTable(active+frozen) + SSTable(major/minor/mini),
+ *          提供统一的读写接口 get()/scan()。
+ * MiniOB: 持有 ObMemTableMgr + SSTable 列表,统一读写路径: active memtable → frozen → SSTable。
+ * ========== */
 #pragma once
 
 #include <vector>

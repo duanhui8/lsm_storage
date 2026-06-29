@@ -2,6 +2,11 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase4.4.2/src/storage/memtable/ob_memtable.h */
 
+/* ========== ObMemtable — 内存表(对应 OB 4.4.2 storage/memtable/ob_memtable.h)
+ * OB 4.4.2: LSM-Tree 的写入口,所有写入先到 MemTable(SkipList),满后 freeze → SSTable。
+ *          持有 ObMvccEngine(多版本并发控制) + ObQueryEngine(hash+btree 双索引)。
+ * MiniOB: 继承 ObIMemtable + ObIReplaySubHandler,支持 PALF CLOG 回放。
+ * ========== */
 #pragma once
 
 #include <atomic>

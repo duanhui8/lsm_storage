@@ -2,6 +2,12 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase4.4.2/src/storage/tablet/tablet/ob_tablet.h */
 
+/* ========== ObTablet — 逻辑存储单元(对应 OB 4.4.2 storage/tablet/ob_tablet.h)
+ *
+ * OB 4.4.2: ObTablet 是数据分区的最小单位,一个 Tablet 属于一个 LS(Log Stream),
+ *          持有 ObTabletTableStore(memtables + sstables) + ObTabletMeta(持久化元数据)。
+ * MiniOB: 每个用户表一个 Tablet,系统 Tablet(tablet_id=0)存储 __all_database 等系统表数据。
+ * ========== */
 #pragma once
 
 #include <string>

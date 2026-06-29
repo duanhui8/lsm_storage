@@ -2,6 +2,11 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase4.4.2/src/storage/blockblocksstable/ob_sstable.h */
 
+/* ========== ObSSTable — 磁盘有序字符串表(对应 OB 4.4.2 storage/blocksstable/ob_sstable.h)
+ * OB 4.4.2: LSM-Tree 的磁盘层,一个 SSTable 由多个 Macro Block(2MB)组成,
+ *          每个Macro Block内包含多个 Micro Block(压缩的行数据)+ B+Tree索引。
+ * MiniOB: 简化版,通过 block_file 存储,支持 read_macro_block()。
+ * ========== */
 #pragma once
 
 #include <string>

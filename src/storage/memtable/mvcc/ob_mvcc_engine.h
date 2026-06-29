@@ -2,6 +2,11 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase4.4.2/src/storage/memtable/mvcc/ob_mvcc_engine.h */
 
+/* ========== ObMvccEngine — MVCC 读写协调器(对应 OB 4.4.2 storage/memtable/mvcc/ob_mvcc_engine.h)
+ * OB 4.4.2: 管理每行的版本链(ObMvccRow→ObMvccTransNode 链表),
+ *          提供快照读(snapshot_version)和写冲突检测(write-write conflict)。
+ * MiniOB: 简化版,保留核心方法 create_kv/mvcc_write/get/scan/finish_kv。
+ * ========== */
 #pragma once
 
 #include <cstdlib>

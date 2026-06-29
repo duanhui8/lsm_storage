@@ -2,6 +2,11 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase/src/share/schema/ob_ddl_sql_service.h */
 
+/* ========== ObDDLSqlService — __all_ddl_operation 系统表写入(对应 OB 4.4.2 share/schema/ob_ddl_sql_service.h)
+ * OB 4.4.2: 基类 ObDDLSqlService::log_operation() 写入 __all_ddl_operation,
+ *          ObDatabaseSqlService/ObTableSqlService 继承它。
+ * MiniOB: log_operation() 直接写系统 Tablet MemTable。
+ * ========== */
 #pragma once
 
 #include <cstdint>

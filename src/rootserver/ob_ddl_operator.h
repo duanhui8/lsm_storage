@@ -1,7 +1,21 @@
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
-Refer to: /opt/oceanbase/src/rootserver/ob_ddl_operator.h */
+Refer to: /opt/oceanbase/src/rootserver/ob_ddl_operator.h
+           /opt/oceanbase/src/rootserver/ob_ddl_operator.cpp (11932 行)
 
+ * ============================================================================
+ * ObDDLOperator — 底层 DDL 操作器（对应 OB 4.4.2 ob_ddl_operator.h）
+ *
+ * 职责: 分配 database_id/table_id + 写入 __all_database 和 __all_ddl_operation 系统表。
+ * 每个 CREATE/DROP DATABASE 操作都通过这里写入系统 Tablet 的 MemTable。
+ *
+ * OB 4.4.2 调用链:
+ *   ObDDLOperator::create_database()
+ *     → schema_service->fetch_new_database_id()                 分配新 ID
+ *     → ObDatabaseSqlService::insert_database()                 INSERT INTO __all_database
+ *     → ObDDLSqlService::log_operation(OB_DDL_CREATE_DATABASE)  INSERT INTO __all_ddl_operation
+ * ============================================================================
+ */
 #pragma once
 #include <cstdint>
 #include "common/sys/rc.h"

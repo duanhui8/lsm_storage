@@ -2,6 +2,11 @@
 miniob is licensed under Mulan PSL v2.
 Refer to: /opt/oceanbase/src/share/inner_table/ob_inner_table_schema_constants.h */
 
+/* ========== OB 内部表常量(对应 OB 4.4.2 ob_inner_table_schema_constants.h, 6702行)
+ * 定义每个系统表的 table_id 和 table_name:
+ *   OB_ALL_DATABASE_TID=104, OB_ALL_DATABASE_TNAME="__all_database"
+ *   OB_ALL_TABLE_TID=500001, OB_ALL_DDL_OPERATION_TID=5
+ * ========== */
 #pragma once
 
 #include <cstdint>

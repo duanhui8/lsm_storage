@@ -1,7 +1,26 @@
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
-Refer to: /opt/oceanbase/src/share/schema/ob_schema_service.h */
+Refer to: /opt/oceanbase/src/share/schema/ob_schema_service.h (1491 行)
 
+ * ============================================================================
+ * ObSchemaService — Schema 管理服务（对应 OB 4.4.2 同名文件）
+ *
+ * OB 4.4.2 机制:
+ *   ObSchemaService 是租户级别的 schema 管理器，持有所有 database/table/column 的
+ *   ObTableSchema 对象。Schema 存储在 MySQL 系统表(__all_database, __all_table等)中，
+ *   通过 ObServerSchemaService 定时刷新到各 Observer 的内存 cache。
+ *
+ * MiniOB 实现:
+ *   内存 unordered_map 存储 database/table schema。
+ *   启动时从 CLOG 回放 + 系统 Tablet 扫描恢复。
+ *   CREATE DATABASE 写入 CLOG → ObDatabaseSqlService → __all_database 系统 Tablet。
+ *
+ * 关键方法:
+ *   create_database / drop_database — 数据库 CRUD
+ *   create_table / get_table_schema — 表 schema 管理
+ *   get_all_databases / get_all_tables — SHOW DATABASES/TABLES 查询
+ * ============================================================================
+ */
 #pragma once
 
 #include "ob_table_schema.h"
