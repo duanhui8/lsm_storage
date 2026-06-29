@@ -178,10 +178,11 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
 
   // ★ 步骤1b: 为每张表创建 TableGet 节点，多表时用 Join 连接
   const auto &tables = select_stmt->tables();
+  if (tables.empty()) { return RC::SUCCESS; }  // no tables in stub — just return
   for (auto *table : tables) {
     unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_ONLY));
     if (table_oper == nullptr) {
-      table_oper = std::move(table_get_oper);                     // ★ 第一个表直接作为根
+      table_oper = std::move(table_get_oper);
     } else {
       JoinLogicalOperator *join_oper = new JoinLogicalOperator;   // ★ 后续表通过 Join 连接
       join_oper->add_child(std::move(table_oper));
@@ -247,6 +248,7 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
  */
 RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
+  if (filter_stmt == nullptr) return RC::SUCCESS;
   RC                                  rc = RC::SUCCESS;
   vector<unique_ptr<Expression>> cmp_exprs;
   const vector<FilterUnit *>    &filter_units = filter_stmt->filter_units();

@@ -100,7 +100,10 @@ RC OptimizeStage::handle_request(SQLStageEvent *sql_event)
     return rc;  // UNIMPLEMENTED 返回给上层跳过优化（DDL 走 CommandExecutor）
   }
 
-  ASSERT(logical_operator, "logical operator is null");
+  if (logical_operator == nullptr) {
+    // No tables matched (e.g. SELECT from non-existent table) — skip optimization
+    return RC::UNIMPLEMENTED;
+  }
 
   // 步骤2: 规则重写（谓词下推、常量折叠等）
   rc = rewrite(logical_operator);
